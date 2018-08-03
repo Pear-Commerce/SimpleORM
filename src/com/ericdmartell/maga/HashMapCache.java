@@ -1,23 +1,22 @@
 package com.ericdmartell.maga;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.ericdmartell.cache.Cache;
 import com.ericdmartell.cache.CacheData;
-import com.fasterxml.jackson.databind.util.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
+
 import java.util.HashMap;
 
 
 public class HashMapCache extends Cache {
 
-	LRUMap<String, Object> data;
+	Map<String, Object> data;
 	public CacheData cacheData = new CacheData();
 
 	public HashMapCache(int maxEntries) {
-		data = new HashMap<>();
+		data = Collections.synchronizedMap(new LRUMap<String, Object>(100, maxEntries));
 	}
 
 	@Override
