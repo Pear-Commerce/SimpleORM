@@ -8,6 +8,7 @@ import java.util.Map;
 import com.ericdmartell.cache.Cache;
 import com.ericdmartell.cache.CacheData;
 import com.fasterxml.jackson.databind.util.LRUMap;
+import java.util.HashMap;
 
 
 public class HashMapCache extends Cache {
@@ -16,7 +17,7 @@ public class HashMapCache extends Cache {
 	public CacheData cacheData = new CacheData();
 
 	public HashMapCache(int maxEntries) {
-		data = new LRUMap<>(100, maxEntries);
+		data = new HashMap<>();
 	}
 
 	@Override
