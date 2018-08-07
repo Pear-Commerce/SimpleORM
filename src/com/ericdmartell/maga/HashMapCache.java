@@ -16,7 +16,7 @@ public class HashMapCache extends Cache {
 	public CacheData cacheData = new CacheData();
 
 	public HashMapCache(int maxEntries) {
-		data = Collections.synchronizedMap(new LRUMap<String, Object>(100, maxEntries));
+		data = Collections.synchronizedMap(new LRUMap<String, Object>(maxEntries, 100));
 	}
 
 	@Override
