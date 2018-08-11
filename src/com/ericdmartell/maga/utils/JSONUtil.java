@@ -13,8 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JSONUtil {
 	
-	private static ObjectMapper objectMapper;
+	public static ObjectMapper objectMapper;
 	static {
+		// defaults
 		objectMapper = new ObjectMapper();
 		objectMapper.enable(DeserializationFeature.USE_LONG_FOR_INTS);
 	}

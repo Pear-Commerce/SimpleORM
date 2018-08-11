@@ -26,7 +26,11 @@ public class MAGATest {
 		dataSource.setUser("root");
 		dataSource.setPassword("Rockydog1");
 		dataSource.setServerName("localhost");
-		JDBCUtil.executeUpdate("drop schema simpleorm", dataSource);
+		try {
+			JDBCUtil.executeUpdate("drop schema simpleorm", dataSource);
+		} catch (RuntimeException e) {
+			// Its ok if it doesn't exist
+		}
 		JDBCUtil.executeUpdate("create schema simpleorm", dataSource);
 		dataSource = new MysqlDataSource();
 		dataSource.setDatabaseName("simpleorm");

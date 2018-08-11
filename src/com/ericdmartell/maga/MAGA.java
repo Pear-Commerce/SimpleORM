@@ -23,9 +23,11 @@ import com.ericdmartell.maga.cache.MAGACache;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;
 import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.JDBCUtil;
+import com.ericdmartell.maga.utils.JSONUtil;
 import com.ericdmartell.maga.utils.MAGAException;
 import com.ericdmartell.maga.utils.TrackedConnection;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gnu.trove.set.hash.THashSet;
 
 public class MAGA {
@@ -35,57 +37,49 @@ public class MAGA {
 	public MAGALoadTemplate template;
 
 	public ThreadPoolExecutor executorPool = new ThreadPoolExecutor(50, 50, 10, TimeUnit.SECONDS,
-			new ArrayBlockingQueue<Runnable>(50));
+			new ArrayBlockingQueue<>(50));
+
+	public MAGA(DataSource dataSource, Cache cache, ObjectMapper objectMapper) {
+		init(dataSource, cache, objectMapper, null);
+	}
 
 	public MAGA(DataSource dataSource, Cache cache) {
-		this.dataSource = dataSource;
-		this.cache = MAGACache.getInstance(cache);
-		this.template = null;
-		executorPool.submit(new Runnable() {
-			@Override
-			public void run() {
-				while (true) {
-					Set<TrackedConnection> reported = new THashSet<>();
-					for (TrackedConnection connection : JDBCUtil.openConnections) {
-						if (new Date().getTime() - connection.date.getTime() >= 5000) {
-							System.out.println("Leaked Connection");
-							connection.stack.printStackTrace();
-							reported.add(connection);
-						}
-					}
-					JDBCUtil.openConnections.removeAll(reported);
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						throw new RuntimeException(e);
-					}
-				}
-			}
-		});
+		init(dataSource, cache, null, null);
 	}
 
 	public MAGA(DataSource dataSource, Cache cache, MAGALoadTemplate template) {
+		init(dataSource, cache, null, template);
+	}
+
+	private void init(DataSource dataSource, Cache cache, ObjectMapper objectMapper, MAGALoadTemplate template) {
 		this.dataSource = dataSource;
 		this.cache = MAGACache.getInstance(cache);
 		this.template = template;
-		executorPool.submit(new Runnable() {
-			@Override
-			public void run() {
-				while (true) {
-					for (TrackedConnection connection : JDBCUtil.openConnections) {
-						if (new Date().getTime() - connection.date.getTime() >= 5000) {
-							System.out.println("Leaked Connection");
-							connection.stack.printStackTrace();
-						}
+		executorPool.submit((Runnable) () -> {
+			while (true) {
+				Set<TrackedConnection> reported = new THashSet<>();
+				for (TrackedConnection connection : JDBCUtil.openConnections) {
+					if (new Date().getTime() - connection.date.getTime() >= 5000) {
+						System.out.println("Leaked Connection");
+						connection.stack.printStackTrace();
+						reported.add(connection);
 					}
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						throw new RuntimeException(e);
-					}
+				}
+				JDBCUtil.openConnections.removeAll(reported);
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
 				}
 			}
 		});
+
+		// This is totally not thread-safe, but MAGA relies on JSONUtil for persistence, and
+		// I want to be able to customize JSONUtil from user code, so massive TODO here to make
+		// JSONUtil instance-scoped. -alex
+		if (objectMapper != null) {
+			JSONUtil.objectMapper = objectMapper;
+		}
 	}
 
 	public <T extends MAGAObject> T load(Class<T> clazz, String id) {
