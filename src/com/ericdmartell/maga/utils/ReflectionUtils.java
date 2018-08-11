@@ -76,12 +76,12 @@ public class ReflectionUtils {
 				field.set(obj, value + "");
 			} else if ((fieldClass.equals(Boolean.class) || fieldClass.equals(boolean.class)) && value instanceof String) {
 				field.set(obj, value == null ? false : ("1".equals(value + "")));
+			} else if (value != null && fieldClass.isEnum()) {
+				field.set(obj, Enum.valueOf(fieldClass, String.valueOf(value)));
 			} else if (value != null && !standardClasses.contains(fieldClass) && Collection.class.isAssignableFrom(fieldClass)) {
 				field.set(obj, JSONUtil.stringToList(value + ""));
 			} else if (value != null && !standardClasses.contains(fieldClass)) {
 				field.set(obj, JSONUtil.stringToObject(value + "", fieldClass));
-			} else if (value != null && fieldClass.isEnum()) {
-				field.set(obj, Enum.valueOf(fieldClass, String.valueOf(value)));
 			} else {
 				field.set(obj, value);
 			}
@@ -104,12 +104,14 @@ public class ReflectionUtils {
 		}
 
 		Object ret;
+		Field field = classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName);
+		Class fieldType = getFieldType(obj.getClass(), fieldName);
 		try {
-			if (classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName) == null) {
+			if (field == null) {
 				ret = null;
 			} else {
-				ret = classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName).get(obj);
-				if (ret != null && !standardClasses.contains(getFieldType(obj.getClass(), fieldName))) {
+				ret = field.get(obj);
+				if (ret != null && !standardClasses.contains(fieldType) && !fieldType.isEnum()) {
 					if (Collection.class.isAssignableFrom(getFieldType(obj.getClass(), fieldName))) {
 						ret = JSONUtil.listToString((List) ret);
 					} else {
@@ -132,7 +134,7 @@ public class ReflectionUtils {
 			if (ret == null) {
 				return null;
 			} else {
-				return "" + ret;
+				return String.valueOf(ret);
 			}
 		}
 		return ret;
