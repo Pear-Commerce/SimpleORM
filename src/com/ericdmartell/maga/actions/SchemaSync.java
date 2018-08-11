@@ -4,11 +4,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.sql.DataSource;
 
@@ -25,6 +21,9 @@ import com.ericdmartell.maga.utils.MAGAException;
 import com.ericdmartell.maga.utils.ReflectionUtils;
 
 import gnu.trove.map.hash.THashMap;
+import org.reflections.scanners.Scanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 
 public class SchemaSync {
 	private DataSource dataSource;
@@ -40,9 +39,15 @@ public class SchemaSync {
 		String schema = JDBCUtil.executeQueryAndReturnSingleString(dataSource, "select database()");
 		Connection connection = JDBCUtil.getConnection(dataSource);
 		try {
+			// The framework includes some objects needed to be synced too
+			Reflections  frameworkReflections = new Reflections(
+					new ConfigurationBuilder()
+							.setUrls(ClasspathHelper.forPackage("com.ericdmartell.maga")));
+			Reflections             userReflections = new Reflections("", new Scanner[0]);
 
-			Reflections reflections = new Reflections("");
-			List<Class<MAGAObject>> classes = new ArrayList(reflections.getSubTypesOf(MAGAObject.class));
+			Set<Class<MAGAObject>> classes = new HashSet<>();
+			classes.addAll(new ArrayList(frameworkReflections.getSubTypesOf(MAGAObject.class)));
+			classes.addAll(new ArrayList(userReflections.getSubTypesOf(MAGAObject.class)));
 
 			for (Class<MAGAObject> clazz : classes) {
 				String tableName = clazz.getSimpleName();
@@ -146,7 +151,7 @@ public class SchemaSync {
 
 			}
 			List<Class<MAGAAssociation>> associationsClasses = new ArrayList(
-					reflections.getSubTypesOf(MAGAAssociation.class));
+					userReflections.getSubTypesOf(MAGAAssociation.class));
 			List<MAGAAssociation> associations = new ArrayList<>();
 			for (Class<MAGAAssociation> clazz : associationsClasses) {
 				associations.add(clazz.newInstance());

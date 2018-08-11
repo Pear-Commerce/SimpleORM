@@ -4,6 +4,7 @@ import com.ericdmartell.maga.MAGA;
 import com.ericdmartell.maga.annotations.MAGADataMigration;
 import com.ericdmartell.maga.objects.DataMigrationRecord;
 import com.ericdmartell.maga.objects.MAGAObject;
+import com.sun.tools.javac.util.StringUtils;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
