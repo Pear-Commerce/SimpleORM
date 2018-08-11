@@ -12,6 +12,14 @@ public class Obj3 extends MAGAObject {
 	@MAGAORMField
 	public BigDecimal val;
 
+	public enum EnumTest {
+		one,
+		two
+	}
+
+	@MAGAORMField
+	public EnumTest enumTest;
+
 	@Override
 	public String toString() {
 		return "Obj3 [field3=" + field3 + ", id=" + id + "]";

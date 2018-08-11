@@ -49,37 +49,41 @@ public class ReflectionUtils {
 			buildIndex(obj.getClass());
 		}
 		try {
+			Field field = classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName);
+			Class fieldClass = getFieldType(obj.getClass(), fieldName);
 			
-			if (classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName) == null) {
+			if (field == null) {
 				return false;
 			}
 			
-			if (getFieldType(obj.getClass(), fieldName).equals(BigDecimal.class)) {
+			if (fieldClass.equals(BigDecimal.class)) {
 				if (value == null) {
-					classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName).set(obj, value);
+					field.set(obj, value);
 				} else {
-					classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName).set(obj, new BigDecimal(value + ""));
+					field.set(obj, new BigDecimal(value + ""));
 				}
-			} else if (getFieldType(obj.getClass(), fieldName).equals(long.class) || getFieldType(obj.getClass(), fieldName).equals(Long.class)) {
+			} else if (fieldClass.equals(long.class) || fieldClass.equals(Long.class)) {
 				if (value == null) {
 					value = 0L;
 				}
-				classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName).set(obj, ((Number) value).longValue());
-			} else if (getFieldType(obj.getClass(), fieldName).equals(int.class) || getFieldType(obj.getClass(), fieldName).equals(Integer.class)) {
+				field.set(obj, ((Number) value).longValue());
+			} else if (fieldClass.equals(int.class) || fieldClass.equals(Integer.class)) {
 				if (value == null) {
 					value = 0;
 				}
-				classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName).set(obj, ((Number) value).intValue());
-			} else if (getFieldType(obj.getClass(), fieldName).equals(String.class) && value instanceof Number) {
-				classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName).set(obj, value + "");
-			} else if ((getFieldType(obj.getClass(), fieldName).equals(Boolean.class) || getFieldType(obj.getClass(), fieldName).equals(boolean.class)) && value instanceof String) {
-				classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName).set(obj, value == null ? false : ("1".equals(value + "")));
-			} else if (value != null && !standardClasses.contains(getFieldType(obj.getClass(), fieldName)) && Collection.class.isAssignableFrom(getFieldType(obj.getClass(), fieldName))) { 
-				classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName).set(obj, JSONUtil.stringToList(value + ""));
-			} else if (value != null && !standardClasses.contains(getFieldType(obj.getClass(), fieldName))) {
-				classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName).set(obj, JSONUtil.stringToObject(value + "", getFieldType(obj.getClass(), fieldName)));
+				field.set(obj, ((Number) value).intValue());
+			} else if (fieldClass.equals(String.class) && value instanceof Number) {
+				field.set(obj, value + "");
+			} else if ((fieldClass.equals(Boolean.class) || fieldClass.equals(boolean.class)) && value instanceof String) {
+				field.set(obj, value == null ? false : ("1".equals(value + "")));
+			} else if (value != null && !standardClasses.contains(fieldClass) && Collection.class.isAssignableFrom(fieldClass)) {
+				field.set(obj, JSONUtil.stringToList(value + ""));
+			} else if (value != null && !standardClasses.contains(fieldClass)) {
+				field.set(obj, JSONUtil.stringToObject(value + "", fieldClass));
+			} else if (value != null && fieldClass.isEnum()) {
+				field.set(obj, Enum.valueOf(fieldClass, String.valueOf(value)));
 			} else {
-				classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName).set(obj, value);
+				field.set(obj, value);
 			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			throw new MAGAException(e);
@@ -124,6 +128,12 @@ public class ReflectionUtils {
 			return 0;
 		} else if (ret == null && (getFieldType(obj.getClass(), fieldName).equals(Boolean.class) || getFieldType(obj.getClass(), fieldName).equals(boolean.class))) {
 			return false;
+		} else if (getFieldType(obj.getClass(), fieldName).isEnum()) {
+			if (ret == null) {
+				return null;
+			} else {
+				return "" + ret;
+			}
 		}
 		return ret;
 

@@ -414,4 +414,26 @@ public class MAGATest {
 		Assert.assertTrue(((Obj3) orm.load(Obj3.class, obj.id)).val.compareTo(new BigDecimal(3.25)) == 0) ;
 		
 	}
+
+	@Test
+	public void testEnum() {
+		MAGA orm = new MAGA(dataSource, new MemcachedCache(client));
+		orm.schemaSync();
+		Obj3 obj = new Obj3();
+		orm.save(obj);
+
+		obj = orm.load(Obj3.class, obj.id);
+		Assert.assertNull(obj.enumTest);
+
+		obj.enumTest = Obj3.EnumTest.one;
+		orm.save(obj);
+
+		obj = orm.load(Obj3.class, obj.id);
+		Assert.assertEquals(Obj3.EnumTest.one, obj.enumTest);
+
+		obj.enumTest = null;
+		orm.save(obj);
+		obj = orm.load(Obj3.class, obj.id);
+		Assert.assertNull(obj.enumTest);
+	}
 }
