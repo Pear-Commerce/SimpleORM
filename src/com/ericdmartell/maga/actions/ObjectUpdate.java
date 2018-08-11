@@ -153,7 +153,7 @@ public class ObjectUpdate {
 								"select max(cast(id as unsigned)) from " + obj.getClass().getSimpleName()) + 1) + "";
 					}
 				} catch (SQLException e) {
-					throw new RuntimeException(e);
+					throw new RuntimeException("Error executing statement " + pstmt, e);
 				}
 			}
 

@@ -2,13 +2,7 @@ package com.ericdmartell.maga.utils;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import com.ericdmartell.maga.annotations.MAGAORMField;
 import com.ericdmartell.maga.objects.MAGAObject;
@@ -22,7 +16,7 @@ public class ReflectionUtils {
 	private static Map<Class<MAGAObject>, Map<String, Class>> classesToFieldNamesAndTypes = new THashMap<>();
 	private static Map<Class, List<String>> indexes = new THashMap<>();
 	public static Set<Class> standardClasses = new HashSet<>(Arrays.asList(new Class[] {
-		int.class, Integer.class, BigDecimal.class, String.class, long.class, Long.class
+		int.class, Integer.class, BigDecimal.class, String.class, long.class, Long.class, Date.class
 	}));
 	
 	

@@ -22,13 +22,11 @@ public class ObjectLoad {
 	private DataSource dataSource;
 	private MAGALoadTemplate template;
 	private MAGACache cache;
-	private MAGA maga;
 
 	public ObjectLoad(DataSource dataSource, MAGACache cache, MAGA maga,
 			MAGALoadTemplate template) {
 		this.dataSource = dataSource;
 		this.cache = cache;
-		this.maga = maga;
 		this.template = template;
 	}
 

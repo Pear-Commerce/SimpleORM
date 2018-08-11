@@ -134,9 +134,8 @@ public class JDBCUtil {
 		}
 	}
 
-	public static void executeUpdate(String sql, DataSource dataSource, Object... params) {
+	public static void executeUpdate(Connection connection, String sql, Object... params) {
 		updates++;
-		Connection connection = getConnection(dataSource);
 		try {
 			PreparedStatement pstmt = prepareStatmenent(connection, sql);
 			for (int i = 0; i < params.length; i++) {
@@ -145,10 +144,16 @@ public class JDBCUtil {
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			throw new MAGAException(e);
+		}
+	}
+
+	public static void executeUpdate(String sql, DataSource dataSource, Object... params) {
+		Connection connection = getConnection(dataSource);
+		try {
+			executeUpdate(connection, sql, params);
 		} finally {
 			closeConnection(connection);
 		}
-
 	}
 
 	public static PreparedStatement prepareStatmenent(Connection connection, String sql) {

@@ -42,6 +42,9 @@ public class MAGA {
 	public MAGA(DataSource dataSource, Cache cache, ObjectMapper objectMapper) {
 		init(dataSource, cache, objectMapper, null);
 	}
+	public MAGA(DataSource dataSource) {
+		init(dataSource, new HashMapCache(1000), null, null);
+	}
 
 	public MAGA(DataSource dataSource, Cache cache) {
 		init(dataSource, cache, null, null);

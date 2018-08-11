@@ -1,6 +1,7 @@
 package com.ericdmartell.maga;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 import com.ericdmartell.maga.annotations.MAGAORMField;
 import com.ericdmartell.maga.objects.MAGAObject;
@@ -16,6 +17,9 @@ public class Obj3 extends MAGAObject {
 		one,
 		two
 	}
+
+	@MAGAORMField
+	public Date date;
 
 	@MAGAORMField
 	public EnumTest enumTest;

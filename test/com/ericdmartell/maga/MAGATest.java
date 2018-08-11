@@ -2,6 +2,7 @@ package com.ericdmartell.maga;
 
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
+import java.util.Date;
 
 import javax.sql.DataSource;
 
@@ -15,6 +16,7 @@ import com.ericdmartell.maga.utils.JDBCUtil;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 
 import net.spy.memcached.MemcachedClient;
+import org.junit.experimental.theories.suppliers.TestedOn;
 
 
 public class MAGATest {
@@ -22,6 +24,11 @@ public class MAGATest {
 	private static MemcachedClient client;
 	@BeforeClass
 	public static void setUp() throws Exception {
+		MAGATest.dataSource = createDataSource();
+		client = new MemcachedClient(new InetSocketAddress("localhost", 11211)); 
+	}
+
+	public static DataSource createDataSource() {
 		MysqlDataSource dataSource = new MysqlDataSource();
 		dataSource.setUser("root");
 		dataSource.setPassword("Rockydog1");
@@ -37,8 +44,18 @@ public class MAGATest {
 		dataSource.setUser("root");
 		dataSource.setPassword("Rockydog1");
 		dataSource.setServerName("localhost");
-		MAGATest.dataSource = dataSource;
-		client = new MemcachedClient(new InetSocketAddress("localhost", 11211)); 
+		return dataSource;
+	}
+
+	@Test
+	public void testDate() {
+		Obj3 o = new Obj3();
+		MAGA orm = new MAGA(dataSource, new MemcachedCache(client));
+		orm.schemaSync();
+		o.date = new Date();
+		orm.save(o);
+		o = orm.load(Obj3.class, o.id);
+		Assert.assertNotNull(o.date);
 	}
 
 	@Test
