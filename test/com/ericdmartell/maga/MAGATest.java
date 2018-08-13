@@ -2,7 +2,11 @@ package com.ericdmartell.maga;
 
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
+<<<<<<< HEAD
 import java.util.Date;
+=======
+import java.sql.SQLException;
+>>>>>>> loadWhereExtra
 
 import javax.sql.DataSource;
 
@@ -37,8 +41,9 @@ public class MAGATest {
 			JDBCUtil.executeUpdate("drop schema simpleorm", dataSource);
 		} catch (RuntimeException e) {
 			// Its ok if it doesn't exist
+		} finally {
+			JDBCUtil.executeUpdate("create schema simpleorm", dataSource);
 		}
-		JDBCUtil.executeUpdate("create schema simpleorm", dataSource);
 		dataSource = new MysqlDataSource();
 		dataSource.setDatabaseName("simpleorm");
 		dataSource.setUser("root");
@@ -419,6 +424,20 @@ public class MAGATest {
 		Assert.assertTrue(orm.loadAssociatedObjects(obj1, assoc).isEmpty());
 		Assert.assertTrue(orm.loadAssociatedObjects(obj2, assoc).isEmpty());
 		
+	}
+
+	@Test
+	public void loadWhere() {
+		MAGA orm = new MAGA(dataSource, new MemcachedCache(client));
+		orm.schemaSync();
+		Obj1 obj1 = new Obj1();
+		obj1.field1 = "This is a test of field one";
+		orm.save(obj1);
+
+		Assert.assertFalse(orm.loadAll(Obj1.class).isEmpty());
+		Assert.assertFalse(orm.loadWhereExtra(Obj1.class, "1", "LIMIT 1").isEmpty());
+		Assert.assertFalse(orm.loadWhereExtra(Obj1.class, "field1 = ?", "LIMIT 1", obj1.field1).isEmpty());
+		Assert.assertTrue(orm.loadWhereExtra(Obj1.class, "0", "LIMIT 1").isEmpty());
 	}
 	
 	@Test

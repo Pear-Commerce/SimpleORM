@@ -43,9 +43,13 @@ public class ObjectLoad {
 	}
 
 	public List<MAGAObject> loadAll(Class clazz) {
+		return loadWhereExtra(clazz, "1", "");
+	}
+
+	public List<MAGAObject> loadWhereExtra(Class clazz, String where, String extra, Object... params) {
 		Connection connection = JDBCUtil.getConnection(dataSource);
 		try {
-			ResultSet rst = JDBCUtil.executeQuery(connection, "select id from `" + clazz.getSimpleName() + "`");
+			ResultSet rst = JDBCUtil.executeQuery(connection, "select id from `" + clazz.getSimpleName() + String.format("` where %s %s", where, extra), params);
 			List<String> ids = new ArrayList<>();
 			while (rst.next()) {
 				ids.add(rst.getString(1));

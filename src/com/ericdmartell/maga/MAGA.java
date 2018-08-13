@@ -97,6 +97,10 @@ public class MAGA {
 		return (List<T>) new ObjectLoad(dataSource, cache, this, template).loadAll(clazz);
 	}
 
+	public <T extends MAGAObject> List<T> loadWhereExtra(Class<T> clazz, String where, String extra, Object... params) {
+		return (List<T>) new ObjectLoad(dataSource, cache, this, template).loadWhereExtra(clazz, where, extra, params);
+	}
+
 	public List<MAGAObject> loadTemplate(MAGALoadTemplate template) {
 		return new ObjectLoad(dataSource, cache, this, template).loadTemplate(template);
 	}
@@ -176,6 +180,5 @@ public class MAGA {
 
 	public <T extends MAGAObject> List<T> loadWhere(Class<T> clazz, String where, Object... params) {
 		return new AssociationLoad(dataSource, cache, this, template).loadWhere(clazz, where, params);
-
 	}
 }
