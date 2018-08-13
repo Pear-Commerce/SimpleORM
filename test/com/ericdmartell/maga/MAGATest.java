@@ -2,11 +2,7 @@ package com.ericdmartell.maga;
 
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
-<<<<<<< HEAD
 import java.util.Date;
-=======
-import java.sql.SQLException;
->>>>>>> loadWhereExtra
 
 import javax.sql.DataSource;
 
