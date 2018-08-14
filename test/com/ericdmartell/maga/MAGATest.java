@@ -6,6 +6,7 @@ import java.util.Date;
 
 import javax.sql.DataSource;
 
+import com.ericdmartell.maga.actions.ObjectUpdate;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -71,6 +72,34 @@ public class MAGATest {
 	
 	@Test
 	public void objectCreate() {	
+		MAGA orm = new MAGA(dataSource, new MemcachedCache(client));
+		orm.schemaSync();
+		Obj1 obj1 = new Obj1();
+		obj1.field1 = "This is a test of field one";
+		orm.save(obj1);
+		Assert.assertEquals(obj1.id, orm.load(Obj1.class, obj1.id).id);
+
+		// Create with preset id
+		String testId = obj1.id + "1";
+		Obj1 obj2 = new Obj1();
+		obj2.id = testId;
+		new ObjectUpdate(dataSource, orm.cache, orm).addSQL(obj2);
+		Assert.assertEquals(testId, obj2.id);
+		Assert.assertEquals(obj2.id, orm.load(Obj1.class, obj2.id).id);
+
+		// Create with preset id again, and fail
+		try {
+			Obj1 obj3 = new Obj1();
+			obj3.id = testId;
+			new ObjectUpdate(dataSource, orm.cache, orm).addSQL(obj3);
+			throw new AssertionError("should not be allowed to save twice");
+		} catch (RuntimeException e) {
+			// expected
+		}
+	}
+
+	@Test
+	public void objectCreateSameId() {
 		MAGA orm = new MAGA(dataSource, new MemcachedCache(client));
 		orm.schemaSync();
 		Obj1 obj1 = new Obj1();

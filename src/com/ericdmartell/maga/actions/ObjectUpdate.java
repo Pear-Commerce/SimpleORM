@@ -130,14 +130,22 @@ public class ObjectUpdate {
 
 			}
 			boolean success = false;
+			boolean idProvided;
 			String id;
-			if (genId) {
-				id = UUID.randomUUID().toString();
+			if (obj.id != null) {
+				id = obj.id;
+				idProvided = true;
 			} else {
-				id = (JDBCUtil.executeQueryAndReturnSingleLong(dataSource,
-						"select max(cast(id as unsigned)) from " + obj.getClass().getSimpleName()) + 1) + "";
+				if (genId) {
+					id = UUID.randomUUID().toString();
+				} else {
+					id = (JDBCUtil.executeQueryAndReturnSingleLong(dataSource,
+							"select max(cast(id as unsigned)) from " + obj.getClass().getSimpleName()) + 1) + "";
+				}
+				idProvided = false;
 			}
 
+			int attempts = 0;
 			while (!success) {
 				try {
 					pstmt.setString(i, id);
@@ -145,10 +153,14 @@ public class ObjectUpdate {
 					JDBCUtil.updates++;
 					success = true;
 				} catch (SQLIntegrityConstraintViolationException e) {
+					if (idProvided || ++attempts > 1000) {
+						throw new RuntimeException(e);
+					}
 					e.printStackTrace();
 					if (genId) {
 						id = UUID.randomUUID().toString();
 					} else {
+						// TODO: Since this isn't thread safe, we can use the return value and set the id after insertion
 						id = (JDBCUtil.executeQueryAndReturnSingleLong(dataSource,
 								"select max(cast(id as unsigned)) from " + obj.getClass().getSimpleName()) + 1) + "";
 					}
