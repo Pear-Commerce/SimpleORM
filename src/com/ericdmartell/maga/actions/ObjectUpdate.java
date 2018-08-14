@@ -92,7 +92,7 @@ public class ObjectUpdate {
 
 	private static Map<Class, Boolean> autoId = new THashMap<>();
 
-	private void addSQL(MAGAObject obj) {
+	public void addSQL(MAGAObject obj) {
 		Class clazz = obj.getClass();
 		if (!autoId.containsKey(clazz)) {
 			autoId.put(clazz, clazz.isAnnotationPresent(MAGATimestampID.class));
