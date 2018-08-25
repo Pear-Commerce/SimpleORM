@@ -1,6 +1,7 @@
 package com.ericdmartell.maga.utils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -70,8 +71,10 @@ public class ReflectionUtils {
 				field.set(obj, value + "");
 			} else if ((fieldClass.equals(Boolean.class) || fieldClass.equals(boolean.class)) && value instanceof String) {
 				field.set(obj, value == null ? false : ("1".equals(value + "")));
-			} else if (value != null && fieldClass.isEnum()) {
+			} else if (value != null && (fieldClass.isEnum())) {
 				field.set(obj, Enum.valueOf(fieldClass, String.valueOf(value)));
+			} else if (value != null && fieldClass.equals(Class.class)) {
+				field.set(obj, Class.forName(String.valueOf(value)));
 			} else if (value != null && !standardClasses.contains(fieldClass) && Collection.class.isAssignableFrom(fieldClass)) {
 				field.set(obj, JSONUtil.stringToList(value + ""));
 			} else if (value != null && !standardClasses.contains(fieldClass)) {
@@ -79,7 +82,7 @@ public class ReflectionUtils {
 			} else {
 				field.set(obj, value);
 			}
-		} catch (IllegalArgumentException | IllegalAccessException e) {
+		} catch (IllegalArgumentException | IllegalAccessException | ClassNotFoundException e) {
 			throw new MAGAException(e);
 		}
 
@@ -105,7 +108,7 @@ public class ReflectionUtils {
 				ret = null;
 			} else {
 				ret = field.get(obj);
-				if (ret != null && !standardClasses.contains(fieldType) && !fieldType.isEnum()) {
+				if (ret != null && !standardClasses.contains(fieldType) && !fieldType.isEnum() && !fieldType.equals(Class.class)) {
 					if (Collection.class.isAssignableFrom(getFieldType(obj.getClass(), fieldName))) {
 						ret = JSONUtil.listToString((List) ret);
 					} else {
@@ -116,20 +119,20 @@ public class ReflectionUtils {
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			throw new MAGAException(e);
 		}
-		if (getFieldType(obj.getClass(), fieldName) == null) {
+		if (fieldType == null) {
 			return ret;
-		} else if (ret == null && (getFieldType(obj.getClass(), fieldName).equals(long.class) || getFieldType(obj.getClass(), fieldName).equals(Long.class))) {
+		} else if (ret == null && (fieldType.equals(long.class) || fieldType.equals(Long.class))) {
 			return 0L;
-		} else if (ret == null && (getFieldType(obj.getClass(), fieldName).equals(int.class) || getFieldType(obj.getClass(), fieldName).equals(Integer.class))) {
+		} else if (ret == null && (fieldType.equals(int.class) || fieldType.equals(Integer.class))) {
 			return 0;
-		} else if (ret == null && (getFieldType(obj.getClass(), fieldName).equals(Boolean.class) || getFieldType(obj.getClass(), fieldName).equals(boolean.class))) {
+		} else if (ret == null && (fieldType.equals(Boolean.class) || fieldType.equals(boolean.class))) {
 			return false;
-		} else if (getFieldType(obj.getClass(), fieldName).isEnum()) {
-			if (ret == null) {
-				return null;
-			} else {
-				return String.valueOf(ret);
-			}
+		} else if (ret == null) {
+			return null;
+		} else if (fieldType.isEnum()) {
+			return String.valueOf(ret);
+		} else if (fieldType.equals(Class.class)) {
+			return ((Class)ret).getName();
 		}
 		return ret;
 

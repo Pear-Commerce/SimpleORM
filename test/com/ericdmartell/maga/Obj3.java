@@ -24,6 +24,9 @@ public class Obj3 extends MAGAObject {
 	@MAGAORMField
 	public EnumTest enumTest;
 
+	@MAGAORMField
+	public Class<? extends Object> classTest;
+
 	@Override
 	public String toString() {
 		return "Obj3 [field3=" + field3 + ", id=" + id + "]";

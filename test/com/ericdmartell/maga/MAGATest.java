@@ -2,6 +2,8 @@ package com.ericdmartell.maga;
 
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 
 import javax.sql.DataSource;
@@ -496,5 +498,24 @@ public class MAGATest {
 		orm.save(obj);
 		obj = orm.load(Obj3.class, obj.id);
 		Assert.assertNull(obj.enumTest);
+	}
+
+	@Test
+	public void testClass() throws SQLException {
+		MAGA orm = new MAGA(dataSource, new MemcachedCache(client));
+		orm.schemaSync();
+		Obj3 obj = new Obj3();
+		obj.classTest = Obj2.class;
+		orm.save(obj);
+
+		ResultSet rst = JDBCUtil.executeQuery(JDBCUtil.getConnection(dataSource), "SELECT classTest FROM Obj3 WHERE id = ?", obj.id);
+		rst.next();
+		String actualSavedVal = rst.getString(1);
+		Assert.assertEquals("com.ericdmartell.maga.Obj2", actualSavedVal);
+
+		obj = orm.load(Obj3.class, obj.id);
+		Assert.assertEquals(Obj2.class, obj.classTest);
+
+
 	}
 }
