@@ -61,6 +61,10 @@ public class MAGA {
 		init(dataSource, cache, null, template, idGen);
 	}
 
+	public MAGA(DataSource dataSource, Cache cache, ObjectMapper objectMapper, MAGALoadTemplate template, IDGen idGen) {
+		init(dataSource, cache, objectMapper, template, idGen);
+	}
+
 	private void init(DataSource dataSource, Cache cache, ObjectMapper objectMapper, MAGALoadTemplate template, IDGen idGen) {
 		this.idGen = idGen;
 		this.dataSource = dataSource;
