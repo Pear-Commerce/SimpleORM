@@ -30,7 +30,6 @@ import com.ericdmartell.maga.utils.MAGAException;
 import com.ericdmartell.maga.utils.TrackedConnection;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.xml.internal.bind.v2.model.core.ID;
 import gnu.trove.set.hash.THashSet;
 
 public class MAGA {
