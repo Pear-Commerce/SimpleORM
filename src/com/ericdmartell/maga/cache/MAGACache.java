@@ -20,9 +20,9 @@ public class MAGACache extends Cache {
 	private Cache delegate;
 	
 	// key is just Classname:ID
-	public List<String> getKeys(Class<MAGAObject> clazz, Collection<String> ids) {
+	public List<String> getKeys(Class<MAGAObject> clazz, Collection<Long> ids) {
 		List<String> ret = new ArrayList<>();
-		for (String id : ids) {
+		for (long id : ids) {
 			ret.add(getKey(clazz, id));
 		}
 		return ret;
@@ -32,7 +32,7 @@ public class MAGACache extends Cache {
 		return getKey((Class<MAGAObject>) simpleORMObject.getClass(), simpleORMObject.id);
 	}
 
-	public final String getKey(Class<MAGAObject> clazz, String id) {
+	public final String getKey(Class<MAGAObject> clazz, long id) {
 		return clazz.getName() + ":" + id;
 	}
 
@@ -65,15 +65,15 @@ public class MAGACache extends Cache {
 		}
 	}
 
-	public final List<MAGAObject> getObjects(Class<MAGAObject> clazz, Collection<String> ids) {
+	public final List<MAGAObject> getObjects(Class<MAGAObject> clazz, Collection<Long> ids) {
 
 		Map<String, Object> ret = getBulk(getKeys(clazz, ids));
 
 		return new ArrayList(ret.values());
 	}
 
-	public final List<String> getAssociatedIds(MAGAObject obj, MAGAAssociation association) {
-		return (List<String>) get(getAssocKey(obj, association));
+	public final List<Long> getAssociatedIds(MAGAObject obj, MAGAAssociation association) {
+		return (List<Long>) get(getAssocKey(obj, association));
 	}
 
 	public final String getAssocKey(MAGAObject obj, MAGAAssociation association) {
@@ -81,7 +81,7 @@ public class MAGACache extends Cache {
 				+ obj.getClass().getSimpleName() + ":" + obj.id;
 	}
 
-	public final void setAssociatedIds(MAGAObject obj, MAGAAssociation association, List<String> associations,
+	public final void setAssociatedIds(MAGAObject obj, MAGAAssociation association, List<Long> associations,
 			 MAGALoadTemplate dependentTemplate) {
 		set(getAssocKey(obj, association), associations);
 		if (dependentTemplate != null) {

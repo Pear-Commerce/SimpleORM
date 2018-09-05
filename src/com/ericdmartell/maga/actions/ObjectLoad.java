@@ -50,9 +50,9 @@ public class ObjectLoad {
 		Connection connection = JDBCUtil.getConnection(dataSource);
 		try {
 			ResultSet rst = JDBCUtil.executeQuery(connection, "select id from `" + clazz.getSimpleName() + String.format("` where %s %s", where, extra), params);
-			List<String> ids = new ArrayList<>();
+			List<Long> ids = new ArrayList<>();
 			while (rst.next()) {
-				ids.add(rst.getString(1));
+				ids.add(rst.getLong(1));
 			}
 			List<MAGAObject> ret = load(clazz, ids);
 			return ret;
@@ -63,9 +63,9 @@ public class ObjectLoad {
 		}
 	}
 
-	public MAGAObject load(Class clazz, String id) {
+	public MAGAObject load(Class clazz, long id) {
 		//Just a wrapper on the load collection of ids.
-		List<String> ids = new ArrayList<>();
+		List<Long> ids = new ArrayList<>();
 		ids.add(id);
 		List<MAGAObject> retList = load(clazz, ids);
 		if (retList.isEmpty()) {
@@ -75,10 +75,10 @@ public class ObjectLoad {
 		}
 	}
 
-	public List<MAGAObject> load(Class clazz, Collection<String> ids) {
+	public List<MAGAObject> load(Class clazz, Collection<Long> ids) {
 
 		// A running list of ids to load
-		List<String> toLoad = new ArrayList<>(ids);
+		List<Long> toLoad = new ArrayList<>(ids);
 
 		//Remove 0's
 		List<String> zeroList = new ArrayList<>();
@@ -127,7 +127,7 @@ public class ObjectLoad {
 		return ret;
 	}
 
-	private List<MAGAObject> loadFromDB(Class<MAGAObject> clazz, Collection<String> ids) {
+	private List<MAGAObject> loadFromDB(Class<MAGAObject> clazz, Collection<Long> ids) {
 		List<MAGAObject> ret = new ArrayList<>();
 
 		// Fields with annotations
@@ -162,7 +162,7 @@ public class ObjectLoad {
 
 	}
 
-	private String getSQL(Class<MAGAObject> clazz, Collection<String> fieldNames, Collection<String> ids) {
+	private String getSQL(Class<MAGAObject> clazz, Collection<String> fieldNames, Collection<Long> ids) {
 		String sql = "select ";
 		for (String fieldName : fieldNames) {
 			sql += "`" + fieldName + "`,";
@@ -173,7 +173,7 @@ public class ObjectLoad {
 			sql += "` where id = ?";
 		} else {
 			sql += "` where id in (";
-			for (String id : ids) {
+			for (long id : ids) {
 				sql +=  "?,";
 			}
 			sql = sql.substring(0, sql.length() - 1);

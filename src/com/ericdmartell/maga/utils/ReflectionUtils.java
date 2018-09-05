@@ -162,7 +162,7 @@ public class ReflectionUtils {
 				}
 			}
 		}
-		fieldNamesToType.put("id", String.class);
+		fieldNamesToType.put("id", long.class);
 		try {
 			fieldNamesToField.put("id", clazz.getField("id"));
 		} catch (NoSuchFieldException | SecurityException e) {

@@ -8,8 +8,7 @@ import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.utils.MAGAException;
 
 public abstract class MAGAObject implements Serializable, Cloneable {
-	public String id;
-	
+	public long id;
 	
 	public MAGAObject clone() {
 		try {
@@ -26,7 +25,7 @@ public abstract class MAGAObject implements Serializable, Cloneable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + (int)id;
 		return result;
 	}
 
@@ -39,10 +38,10 @@ public abstract class MAGAObject implements Serializable, Cloneable {
 		if (getClass() != obj.getClass())
 			return false;
 		MAGAObject other = (MAGAObject) obj;
-		if (id == null) {
-			if (other.id != null)
+		if (id == 0) {
+			if (other.id != 0)
 				return false;
-		} else if (!id.equals(other.id))
+		} else if (id != other.id)
 			return false;
 		return true;
 	}

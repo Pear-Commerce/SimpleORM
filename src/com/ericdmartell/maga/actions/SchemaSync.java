@@ -57,10 +57,10 @@ public class SchemaSync {
 						tableName, schema) == 1;
 				if (!tableExists) {
 					changes = true;
-					JDBCUtil.executeUpdate(
-							"create table `" + tableName + "`(id varchar(255) not null, primary key(id))", dataSource);
+					String sql = "create table `" + tableName + "`(id bigint not null AUTO_INCREMENT, primary key(id))";
+					JDBCUtil.executeUpdate(sql, dataSource);
 
-					System.out.println("Creating table " + tableName);
+					System.out.println("Creating table " + tableName + ". (" + sql + ")");
 				}
 
 				boolean historyTableExists = JDBCUtil.executeQueryAndReturnSingleLong(dataSource,
@@ -68,7 +68,7 @@ public class SchemaSync {
 						tableName + "_history", schema) == 1;
 				if (!historyTableExists && !clazz.isAnnotationPresent(MAGANoHistory.class)) {
 					JDBCUtil.executeUpdate("create table " + tableName + "_history"
-							+ "(id varchar(255), date datetime, changes longtext, stack longtext)", dataSource);
+							+ "(id bigint, date datetime, changes longtext, stack longtext)", dataSource);
 					JDBCUtil.executeUpdate("alter table " + tableName + "_history" + " add index id(id)", dataSource);
 					JDBCUtil.executeUpdate("alter table " + tableName + "_history" + " add index date(date)",
 							dataSource);
@@ -89,7 +89,7 @@ public class SchemaSync {
 				for (String columnName : fieldNames) {
 					Class fieldType;
 					if (columnName.equals("id")) {
-						fieldType = String.class;
+						fieldType = long.class;
 					} else {
 						fieldType = ReflectionUtils.getFieldType(clazz, columnName);
 					}
@@ -101,6 +101,7 @@ public class SchemaSync {
 						field = clazz.getDeclaredField(columnName);
 					}
 
+					boolean isId = columnName.equals("id");
 					if (field.getAnnotation(MAGAORMField.class) != null
 							&& !field.getAnnotation(MAGAORMField.class).dataType().equals("")) {
 						columnType = field.getAnnotation(MAGAORMField.class).dataType();
@@ -111,8 +112,8 @@ public class SchemaSync {
 						columnType = "decimal(10,2)";
 					} else if (fieldType == Date.class) {
 						columnType = "datetime";
-					} else if (columnName.equals("id")) {
-						columnType = "varchar(255)";
+					} else if (isId) {
+						columnType = "bigint";
 					} else {
 						columnType = "varchar(500)";
 					}
@@ -129,9 +130,9 @@ public class SchemaSync {
 									|| !columnsToTypes.get(columnName).toLowerCase().contains("text"))) {
 						changes = true;
 						System.out.println(
-								"Modifying column " + columnName + ":" + columnType + " to table " + tableName);
+								"Modifying column " + columnName + ":" + columnType + " on table " + tableName);
 						JDBCUtil.executeUpdate(
-								"alter table `" + tableName + "` modify column `" + columnName + "` " + columnType,
+								"alter table `" + tableName + "` modify column `" + columnName + "` " + columnType + (isId ? " AUTO_INCREMENT" : ""),
 								dataSource);
 					}
 				}

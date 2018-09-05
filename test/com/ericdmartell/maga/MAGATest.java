@@ -9,6 +9,9 @@ import java.util.Date;
 import javax.sql.DataSource;
 
 import com.ericdmartell.maga.actions.ObjectUpdate;
+import com.ericdmartell.maga.annotations.MAGATimestampID;
+import com.ericdmartell.maga.id.LongUUIDGen;
+import com.ericdmartell.maga.id.RandomIDGen;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -82,7 +85,7 @@ public class MAGATest {
 		Assert.assertEquals(obj1.id, orm.load(Obj1.class, obj1.id).id);
 
 		// Create with preset id
-		String testId = obj1.id + "1";
+		long testId = obj1.id + 1;
 		Obj1 obj2 = new Obj1();
 		obj2.id = testId;
 		new ObjectUpdate(dataSource, orm.cache, orm).addSQL(obj2);
@@ -359,7 +362,7 @@ public class MAGATest {
 		MAGAAssociation assoc = new TestAssoc2();
 		orm.addAssociation(obj1, obj2Other, assoc);
 		
-		Assert.assertTrue(((MAGAObject)orm.loadAssociatedObjects(obj1, assoc).get(0)).id.equals(obj2Other.id));
+		Assert.assertTrue(((MAGAObject)orm.loadAssociatedObjects(obj1, assoc).get(0)).id == obj2Other.id);
 		Assert.assertTrue(orm.loadAssociatedObjects(obj2, assoc).isEmpty());
 		
 		obj2.joinColumn = obj1.id;
@@ -507,7 +510,6 @@ public class MAGATest {
 		Obj3 obj = new Obj3();
 		obj.classTest = Obj2.class;
 		orm.save(obj);
-
 		ResultSet rst = JDBCUtil.executeQuery(JDBCUtil.getConnection(dataSource), "SELECT classTest FROM Obj3 WHERE id = ?", obj.id);
 		rst.next();
 		String actualSavedVal = rst.getString(1);
@@ -515,7 +517,65 @@ public class MAGATest {
 
 		obj = orm.load(Obj3.class, obj.id);
 		Assert.assertEquals(Obj2.class, obj.classTest);
-
-
 	}
+
+	@MAGATimestampID
+	public static class IdGenEnt extends MAGAObject {}
+
+	public static class NoIdGenEnt extends MAGAObject {}
+
+	@Test
+	public void testIds() throws SQLException {
+		long before = System.currentTimeMillis();
+		MAGA orm = new MAGA(dataSource, new MemcachedCache(client), null, new RandomIDGen());
+		orm.schemaSync();
+		IdGenEnt obj1 = new IdGenEnt();
+		orm.save(obj1);
+		IdGenEnt obj2 = new IdGenEnt();
+		orm.save(obj2);
+		long after = System.currentTimeMillis();
+
+		System.out.println(obj1.id + " " + obj2.id);
+		Assert.assertTrue(Math.abs(obj1.id - obj2.id) > 1);
+		long fakeUuidTimestamp = new LongUUIDGen(1).getJavaTimestamp(obj1.id);
+		Assert.assertFalse(before <= fakeUuidTimestamp && after >= fakeUuidTimestamp);
+
+		// test given id
+		IdGenEnt obj3 = new IdGenEnt();
+		long testId = System.currentTimeMillis();
+		obj3.id = testId;
+		new ObjectUpdate(dataSource, orm.cache, orm).addSQL(obj3);
+		Assert.assertNotNull(orm.load(IdGenEnt.class, testId));
+
+		orm = new MAGA(dataSource, new MemcachedCache(client), null, new LongUUIDGen(1));
+		orm.schemaSync();
+		before = System.currentTimeMillis();
+		IdGenEnt obj4 = new IdGenEnt();
+		orm.save(obj4);
+		after = System.currentTimeMillis();
+
+		long timestamp = ((LongUUIDGen)orm.idGen).getJavaTimestamp(obj4.id);
+		Assert.assertTrue(before <= timestamp && after >= timestamp);
+
+		// test given id
+		IdGenEnt obj5 = new IdGenEnt();
+		testId = System.currentTimeMillis();
+		obj5.id = testId;
+		new ObjectUpdate(dataSource, orm.cache, orm).addSQL(obj5);
+		Assert.assertNotNull(orm.load(IdGenEnt.class, testId));
+
+		NoIdGenEnt obj6 = new NoIdGenEnt();
+		orm.save(obj6);
+		NoIdGenEnt obj7 = new NoIdGenEnt();
+		orm.save(obj7);
+		Assert.assertEquals(1, obj7.id - obj6.id);
+
+		// test given id
+		IdGenEnt obj8 = new IdGenEnt();
+		testId = System.currentTimeMillis();
+		obj8.id = testId;
+		new ObjectUpdate(dataSource, orm.cache, orm).addSQL(obj8);
+		Assert.assertNotNull(orm.load(IdGenEnt.class, testId));
+	}
+
 }
