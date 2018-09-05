@@ -205,7 +205,7 @@ public class SchemaSync {
 								: "bigint(18)";
 						changes = true;
 						JDBCUtil.executeUpdate("create table `" + tableName + "`(" + col1 + " " + type1 + ", " + col2
-								+ "  " + type2 + ", dateAssociated datetime, firstAssoc varchar(1)", dataSource);
+								+ "  " + type2 + ", dateAssociated datetime, firstAssoc varchar(1))", dataSource);
 						JDBCUtil.executeUpdate(
 								"alter table `" + tableName + "` add index " + col1 + "(" + col1 + "," + col2 + ")",
 								dataSource);
