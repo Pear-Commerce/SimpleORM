@@ -20,6 +20,8 @@ import com.ericdmartell.maga.actions.ObjectUpdate;
 import com.ericdmartell.maga.actions.SchemaSync;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.cache.MAGACache;
+import com.ericdmartell.maga.id.IDGen;
+import com.ericdmartell.maga.id.LongUUIDGen;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;
 import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.JDBCUtil;
@@ -28,10 +30,12 @@ import com.ericdmartell.maga.utils.MAGAException;
 import com.ericdmartell.maga.utils.TrackedConnection;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.xml.internal.bind.v2.model.core.ID;
 import gnu.trove.set.hash.THashSet;
 
 public class MAGA {
 
+	public IDGen idGen;
 	public DataSource dataSource;
 	public MAGACache cache;
 	public MAGALoadTemplate template;
@@ -40,21 +44,26 @@ public class MAGA {
 			new ArrayBlockingQueue<>(50));
 
 	public MAGA(DataSource dataSource, Cache cache, ObjectMapper objectMapper) {
-		init(dataSource, cache, objectMapper, null);
+		init(dataSource, cache, objectMapper, null, null);
 	}
 	public MAGA(DataSource dataSource) {
-		init(dataSource, new HashMapCache(1000), null, null);
+		init(dataSource, new HashMapCache(1000), null, null, null);
 	}
 
 	public MAGA(DataSource dataSource, Cache cache) {
-		init(dataSource, cache, null, null);
+		init(dataSource, cache, null, null, null);
 	}
 
 	public MAGA(DataSource dataSource, Cache cache, MAGALoadTemplate template) {
-		init(dataSource, cache, null, template);
+		init(dataSource, cache, null, template, null);
 	}
 
-	private void init(DataSource dataSource, Cache cache, ObjectMapper objectMapper, MAGALoadTemplate template) {
+	public MAGA(DataSource dataSource, Cache cache, MAGALoadTemplate template, IDGen idGen) {
+		init(dataSource, cache, null, template, idGen);
+	}
+
+	private void init(DataSource dataSource, Cache cache, ObjectMapper objectMapper, MAGALoadTemplate template, IDGen idGen) {
+		this.idGen = idGen;
 		this.dataSource = dataSource;
 		this.cache = MAGACache.getInstance(cache);
 		this.template = template;
@@ -85,11 +94,11 @@ public class MAGA {
 		}
 	}
 
-	public <T extends MAGAObject> T load(Class<T> clazz, String id) {
+	public <T extends MAGAObject> T load(Class<T> clazz, long id) {
 		return clazz.cast(new ObjectLoad(dataSource, cache, this, template).load(clazz, id));
 	}
 
-	public <T extends MAGAObject> List<T> load(Class<T> clazz, Collection<String> ids) {
+	public <T extends MAGAObject> List<T> load(Class<T> clazz, Collection<Long> ids) {
 		return (List<T>) new ObjectLoad(dataSource, cache, this, template).load(clazz, ids);
 	}
 
@@ -127,7 +136,6 @@ public class MAGA {
 		throwExceptionIfCantSave(otherObject);
 		throwExceptionIfObjectUnsaved(baseObject);
 		new AssociationAdd(dataSource, cache, this).add(baseObject, otherObject, association);
-		;
 	}
 
 	public void deleteAssociations(MAGAObject baseObject, MAGAAssociation association) {
@@ -156,7 +164,7 @@ public class MAGA {
 	}
 
 	private void throwExceptionIfObjectUnsaved(MAGAObject object) {
-		if (object.id == null) {
+		if (object.id == 0) {
 			throw new MAGAException(
 					"Method unsupported for unsaved object [" + object.getClass().getName() + "] " + object.id);
 		}

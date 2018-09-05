@@ -25,7 +25,7 @@ public class Obj3 extends MAGAObject {
 	public EnumTest enumTest;
 
 	@MAGAORMField
-	public Class<? extends Object> classTest;
+	public Class<? extends MAGAObject> classTest;
 
 	@Override
 	public String toString() {

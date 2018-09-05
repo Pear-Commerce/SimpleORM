@@ -8,7 +8,7 @@ public class Obj2 extends MAGAObject {
 	public String field2;
 	
 	@MAGAORMField
-	public String joinColumn;
+	public long joinColumn;
 	
 	@Override
 	public String toString() {
