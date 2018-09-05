@@ -205,12 +205,18 @@ public class SchemaSync {
 								: "bigint(18)";
 						changes = true;
 						JDBCUtil.executeUpdate("create table `" + tableName + "`(" + col1 + " " + type1 + ", " + col2
-								+ "  " + type2 + ", dateAssociated datetime)", dataSource);
+								+ "  " + type2 + ", dateAssociated datetime, firstAssoc varchar(1)", dataSource);
 						JDBCUtil.executeUpdate(
 								"alter table `" + tableName + "` add index " + col1 + "(" + col1 + "," + col2 + ")",
 								dataSource);
 						JDBCUtil.executeUpdate(
 								"alter table `" + tableName + "` add index " + col2 + "(" + col2 + "," + col1 + ")",
+								dataSource);
+						JDBCUtil.executeUpdate(
+								"alter table `" + tableName + "` add index dateAssociated(dateAssociated)",
+								dataSource);
+						JDBCUtil.executeUpdate(
+								"alter table `" + tableName + "` add index firstAssoc(firstAssoc)",
 								dataSource);
 						System.out.println("Creating join table " + tableName);
 					} else {
@@ -223,6 +229,24 @@ public class SchemaSync {
 									dataSource);
 							JDBCUtil.executeUpdate(
 									"update `" + tableName + "` set dateAssociated = now()",
+									dataSource);
+							JDBCUtil.executeUpdate(
+									"alter table `" + tableName + "` add index dateAssociated(dateAssociated)",
+									dataSource);
+						}
+						
+						try {
+							JDBCUtil.executeQueryAndReturnStrings(dataSource, "select firstAssoc from " + tableName);
+						} catch (Exception e) {
+							System.out.println("Adding firstAssoc to " + tableName);
+							JDBCUtil.executeUpdate(
+									"alter table `" + tableName + "` add column firstAssoc varchar(1)",
+									dataSource);
+							JDBCUtil.executeUpdate(
+									"update `" + tableName + "` set dateAssociated = now()",
+									dataSource);
+							JDBCUtil.executeUpdate(
+									"alter table `" + tableName + "` add index firstAssoc(firstAssoc)",
 									dataSource);
 						}
 					}

@@ -1,5 +1,8 @@
 package com.ericdmartell.maga.actions;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -38,11 +41,26 @@ public class AssociationAdd {
 
 	private void manyToMany(MAGAObject obj, MAGAObject obj2, MAGAAssociation association) {
 		
+		String table = association.class1().getSimpleName() + "_to_"
+				+ association.class2().getSimpleName();
+		
+		String first = "1";
+		Connection connection = null;
+		try {
+			connection = JDBCUtil.getConnection(dataSource);
+			ResultSet rst = JDBCUtil.executeQuery(connection, "select * from " + table +" where `" + obj.getClass().getSimpleName() + "` = ? and `" + obj2.getClass().getSimpleName() + "` = ?", obj.id, obj2.id);
+			if (rst.next()) {
+				first = "0";
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		} finally {
+			JDBCUtil.closeConnection(connection);
+		}
 		
 		// DB Part
-		JDBCUtil.executeUpdate("insert into `" + association.class1().getSimpleName() + "_to_"
-				+ association.class2().getSimpleName() + "`(`" + obj.getClass().getSimpleName() + "`,`"
-				+ obj2.getClass().getSimpleName() + "`, dateAssociated) values(?,?, now())", dataSource, obj.id, obj2.id);
+		JDBCUtil.executeUpdate("insert into `" + table + "`(`" + obj.getClass().getSimpleName() + "`,`"
+				+ obj2.getClass().getSimpleName() + "`, dateAssociated, firstAssoc) values(?,?, now(), ?)", dataSource, obj.id, obj2.id, first);
 
 		// Cache Part
 		cache.dirtyAssoc(obj, association);
