@@ -205,7 +205,7 @@ public class SchemaSync {
 								: "bigint(18)";
 						changes = true;
 						JDBCUtil.executeUpdate("create table `" + tableName + "`(" + col1 + " " + type1 + ", " + col2
-								+ "  " + type2 + ")", dataSource);
+								+ "  " + type2 + ", dateAssociated datetime)", dataSource);
 						JDBCUtil.executeUpdate(
 								"alter table `" + tableName + "` add index " + col1 + "(" + col1 + "," + col2 + ")",
 								dataSource);
@@ -213,6 +213,18 @@ public class SchemaSync {
 								"alter table `" + tableName + "` add index " + col2 + "(" + col2 + "," + col1 + ")",
 								dataSource);
 						System.out.println("Creating join table " + tableName);
+					} else {
+						try {
+							JDBCUtil.executeQueryAndReturnStrings(dataSource, "select dateAssociated from " + tableName);
+						} catch (Exception e) {
+							System.out.println("Adding date to " + tableName);
+							JDBCUtil.executeUpdate(
+									"alter table `" + tableName + "` add column dateAssociated datetime",
+									dataSource);
+							JDBCUtil.executeUpdate(
+									"update `" + tableName + "` set dateAssociated = now()",
+									dataSource);
+						}
 					}
 				}
 			}

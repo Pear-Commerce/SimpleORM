@@ -42,7 +42,7 @@ public class AssociationAdd {
 		// DB Part
 		JDBCUtil.executeUpdate("insert into `" + association.class1().getSimpleName() + "_to_"
 				+ association.class2().getSimpleName() + "`(`" + obj.getClass().getSimpleName() + "`,`"
-				+ obj2.getClass().getSimpleName() + "`) values(?,?)", dataSource, obj.id, obj2.id);
+				+ obj2.getClass().getSimpleName() + "`, dateAssociated) values(?,?, now())", dataSource, obj.id, obj2.id);
 
 		// Cache Part
 		cache.dirtyAssoc(obj, association);
