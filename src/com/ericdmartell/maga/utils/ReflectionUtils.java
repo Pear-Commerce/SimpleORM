@@ -17,7 +17,7 @@ public class ReflectionUtils {
 	private static Map<Class<MAGAObject>, Map<String, Class>> classesToFieldNamesAndTypes = new THashMap<>();
 	private static Map<Class, List<String>> indexes = new THashMap<>();
 	public static Set<Class> standardClasses = new HashSet<>(Arrays.asList(new Class[] {
-		int.class, Integer.class, BigDecimal.class, String.class, long.class, Long.class, Date.class
+		int.class, Integer.class, BigDecimal.class, String.class, long.class, Long.class, Date.class, Boolean.class, boolean.class
 	}));
 	
 	
@@ -99,7 +99,9 @@ public class ReflectionUtils {
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
-
+		if (fieldName.contains("admin")) {
+			System.out.println("wtf");
+		}
 		Object ret;
 		Field field = classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName);
 		Class fieldType = getFieldType(obj.getClass(), fieldName);
@@ -121,18 +123,27 @@ public class ReflectionUtils {
 		}
 		if (fieldType == null) {
 			return ret;
-		} else if (ret == null && (fieldType.equals(long.class) || fieldType.equals(Long.class))) {
-			return 0L;
-		} else if (ret == null && (fieldType.equals(int.class) || fieldType.equals(Integer.class))) {
-			return 0;
-		} else if (ret == null && (fieldType.equals(Boolean.class) || fieldType.equals(boolean.class))) {
-			return false;
-		} else if (ret == null) {
-			return null;
-		} else if (fieldType.isEnum()) {
+		}
+		
+		
+		if (ret == null) {
+			if (fieldType.equals(long.class) || fieldType.equals(Long.class)) {
+				ret = 0L;
+			} else if (fieldType.equals(int.class) || fieldType.equals(Integer.class)) {
+				ret = 0;
+			} else if (fieldType.equals(Boolean.class) || fieldType.equals(boolean.class)) {
+				ret = false;
+			} else {
+				return null;
+			}
+		}
+		
+		if (fieldType.isEnum()) {
 			return String.valueOf(ret);
 		} else if (fieldType.equals(Class.class)) {
 			return ((Class)ret).getName();
+		} else if (fieldType.equals(Boolean.class) || fieldType.equals(boolean.class)) {
+			return ((boolean)ret) ? "1" : "0";
 		}
 		return ret;
 
