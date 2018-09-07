@@ -96,9 +96,7 @@ public class ObjectUpdate {
         }
 
         boolean genId = autoId.get(clazz);
-
-        System.out.println(clazz + " " + clazz.isAnnotationPresent(MAGATimestampID.class) + " " + genId + " " + obj.id + " " + maga.idGen);
-
+        
         List<String> fieldNames = new ArrayList<>(ReflectionUtils.getFieldNames(obj.getClass()));
 
         if (obj.id == 0) {
