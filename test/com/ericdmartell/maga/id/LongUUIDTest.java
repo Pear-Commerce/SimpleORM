@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by alexwyler on 9/4/18.
@@ -24,9 +25,8 @@ public class LongUUIDTest {
         Assert.assertTrue(timestamp <= afterTimestamp);
 
         // Check for Javascript compatibility
-        Assert.assertEquals(0, uuid >> (64-53));
+        Assert.assertTrue(uuid < (Math.pow(2, 53) - 1));
     }
-
 
     @Test
     public void testOffset() {
