@@ -156,12 +156,22 @@ public class ReflectionUtils {
 		return indexes.get(clazz);
 	}
 
+	public static List<Field> getAllFields(Class<?> type) {
+		List<Field> fields = new ArrayList<>();
+		fields.addAll(Arrays.asList(type.getDeclaredFields()));
+	    if (type.getSuperclass() != null) {
+	        fields.addAll(getAllFields(type.getSuperclass()));
+	    }
+	    return fields;
+	}
+	
 	private static void buildIndex(Class clazz) {
 		
 		Map<String, Field> fieldNamesToField = new THashMap<>();
 		Map<String, Class> fieldNamesToType = new THashMap<>();
 		List<String> indexedColumns = new ArrayList<>();
-		for (Field field : clazz.getDeclaredFields()) {
+		
+		for (Field field : getAllFields(clazz)) {
 			
 			field.setAccessible(true);
 			if (field.isAnnotationPresent(MAGAORMField.class)) {
