@@ -99,6 +99,7 @@ public class ReflectionUtils {
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
+
 		Object ret;
 		Field field = classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName);
 		Class fieldType = getFieldType(obj.getClass(), fieldName);

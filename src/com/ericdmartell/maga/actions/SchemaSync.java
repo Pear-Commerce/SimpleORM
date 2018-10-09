@@ -125,6 +125,16 @@ public class SchemaSync {
 						JDBCUtil.executeUpdate(
 								"alter table `" + tableName + "` add column `" + columnName + "` " + columnType,
 								dataSource);
+						if (fieldType.equals(Boolean.class) || fieldType.equals(boolean.class)) {
+							JDBCUtil.executeUpdate(
+									"update `" + tableName + "` set `" + columnName + "` = 0 ",
+									dataSource);
+						} else if (fieldType == long.class || fieldType == int.class || fieldType == Integer.class
+							|| fieldType == Long.class) {
+							JDBCUtil.executeUpdate(
+									"update `" + tableName + "` set `" + columnName + "` = 0 ",
+									dataSource);
+						}
 					} else if (!columnsToTypes.get(columnName).toLowerCase().contains(columnType)
 							&& ((fieldType != String.class && ReflectionUtils.standardClasses.contains(fieldType))
 									|| !columnsToTypes.get(columnName).toLowerCase().contains("text"))) {
