@@ -99,9 +99,6 @@ public class ReflectionUtils {
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
-		if (fieldName.contains("admin")) {
-			System.out.println("wtf");
-		}
 		Object ret;
 		Field field = classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName);
 		Class fieldType = getFieldType(obj.getClass(), fieldName);
