@@ -3,6 +3,7 @@ package com.ericdmartell.maga.utils;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.sql.ResultSet;
 import java.util.*;
 
 import com.ericdmartell.maga.annotations.MAGAORMField;
@@ -191,5 +192,19 @@ public class ReflectionUtils {
 
 		classesToFieldNamesAndFields.put(clazz, fieldNamesToField);
 		classesToFieldNamesAndTypes.put(clazz, fieldNamesToType);
+	}
+
+	public static <T extends MAGAObject> T getEntityFromResultSet(Class<T> clazz, ResultSet rst) {
+		try {
+			T toFill =clazz.newInstance();
+			List<String> fieldNames = new ArrayList<>(ReflectionUtils.getFieldNames(clazz));
+			for (String fieldName : fieldNames) {
+				ReflectionUtils.setFieldValue(toFill, fieldName, rst.getObject(fieldName));
+			}
+			return toFill;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		
 	}
 }

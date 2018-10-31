@@ -139,21 +139,11 @@ public class ObjectLoad {
 
 		try {
 			ResultSet rst = JDBCUtil.executeQuery(connection, sql, ids);
-
-			// Rather than repeatedly instantiating, we'll keep cloning this
-			// guy. TODO: is this actually a perf gain?
-			MAGAObject emptyObject = clazz.newInstance();
-
 			while (rst.next()) {
-				MAGAObject toFill = emptyObject.clone();
-				// Fill those objects
-				for (String fieldName : fieldNames) {
-					ReflectionUtils.setFieldValue(toFill, fieldName, rst.getObject(fieldName));
-				}
-
-				ret.add(toFill);
+				MAGAObject entity =  ReflectionUtils.getEntityFromResultSet(clazz, rst);
+				ret.add(entity);
 			}
-		} catch (SQLException | IllegalAccessException | InstantiationException e) {
+		} catch (Exception e) {
 			throw new MAGAException(e);
 		} finally {
 			JDBCUtil.closeConnection(connection);
