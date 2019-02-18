@@ -111,7 +111,7 @@ public class SchemaSync {
 					} else if (fieldType == BigDecimal.class) {
 						columnType = "decimal(10,2)";
 					} else if (fieldType == Date.class) {
-						columnType = "datetime null default null";
+						columnType = "timestamp null default null";
 					} else if (isId) {
 						columnType = "bigint";
 					} else {
