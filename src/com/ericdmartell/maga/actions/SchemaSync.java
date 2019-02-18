@@ -111,7 +111,7 @@ public class SchemaSync {
 					} else if (fieldType == BigDecimal.class) {
 						columnType = "decimal(10,2)";
 					} else if (fieldType == Date.class) {
-						columnType = "datetime";
+						columnType = "datetime null default null";
 					} else if (isId) {
 						columnType = "bigint";
 					} else {
@@ -216,7 +216,7 @@ public class SchemaSync {
 								: "bigint(18)";
 						changes = true;
 						JDBCUtil.executeUpdate("create table `" + tableName + "`(" + col1 + " " + type1 + ", " + col2
-								+ "  " + type2 + ", dateAssociated datetime, firstAssoc varchar(1))", dataSource);
+								+ "  " + type2 + ", dateAssociated timestamp null default null, firstAssoc varchar(1))", dataSource);
 						JDBCUtil.executeUpdate(
 								"alter table `" + tableName + "` add index " + col1 + "(" + col1 + "," + col2 + ")",
 								dataSource);
@@ -236,7 +236,7 @@ public class SchemaSync {
 						} catch (Exception e) {
 							System.out.println("Adding date to " + tableName);
 							JDBCUtil.executeUpdate(
-									"alter table `" + tableName + "` add column dateAssociated datetime",
+									"alter table `" + tableName + "` add column dateAssociated timestamp null default null",
 									dataSource);
 							JDBCUtil.executeUpdate(
 									"update `" + tableName + "` set dateAssociated = now()",
