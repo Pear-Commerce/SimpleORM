@@ -6,6 +6,12 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>SimpleORM</name>
 	<description>Makes ORM Easy</description>
+	<repositories>
+	    <repository>
+	        <id>local-maven-repo</id>
+	        <url>file:///${project.basedir}/lib</url>
+	    </repository>
+	</repositories>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<plugins>
@@ -26,9 +32,9 @@
 			<version>3.0.3</version>
 		</dependency>
 		<dependency>
-			<groupId>org.reflections</groupId>
-			<artifactId>reflections</artifactId>
-			<version>0.9.10</version>
+			<groupId>com.pearcommerce</groupId>
+			<artifactId>shaded-reflections-0.9.11</artifactId>
+			<version>1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
