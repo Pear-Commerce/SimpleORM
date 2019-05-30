@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/Pear-Commerce/MAGA.svg?style=svg)](https://circleci.com/gh/Pear-Commerce/MAGA)
+
 # Make AssociatedObjects GreatlyEasierToUse Again
 
 Writing custom SQL to fetch from your database?  Sad!
