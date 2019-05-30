@@ -37,7 +37,11 @@ public class MAGATest {
 	public static DataSource createDataSource() {
 		MysqlDataSource dataSource = new MysqlDataSource();
 		dataSource.setUser("root");
-		dataSource.setPassword("Rockydog1");
+		String password = System.getenv("MYSQL_PASSWORD");
+		if (password == null) {
+			password = "Rockydog1";
+		}
+		dataSource.setPassword(password);
 		dataSource.setServerName("localhost");
 		try {
 			JDBCUtil.executeUpdate("drop schema simpleorm", dataSource);
@@ -49,7 +53,7 @@ public class MAGATest {
 		dataSource = new MysqlDataSource();
 		dataSource.setDatabaseName("simpleorm");
 		dataSource.setUser("root");
-		dataSource.setPassword("Rockydog1");
+		dataSource.setPassword(password);
 		dataSource.setServerName("localhost");
 		return dataSource;
 	}
