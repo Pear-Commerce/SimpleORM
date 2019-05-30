@@ -1,25 +1,34 @@
 package com.ericdmartell.maga.objects;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.sql.Ref;
 import java.util.List;
 import java.util.Map;
 
+import com.ericdmartell.maga.MAGA;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.utils.MAGAException;
+import com.ericdmartell.maga.utils.ReflectionUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import gnu.trove.map.hash.THashMap;
+import org.apache.commons.lang3.BooleanUtils;
 
-public abstract class MAGAObject implements Serializable, Cloneable {
+public abstract class MAGAObject<T extends MAGAObject<T>> implements Serializable, Cloneable {
+
 	public long id;
-	
-	public MAGAObject clone() {
+
+	public T clone() {
 		try {
-			return (MAGAObject) super.clone();
+			return (T) super.clone();
 		} catch (CloneNotSupportedException e) {
 			throw new MAGAException(e);
 		}
 	}
-	
+
 	public Map<MAGAAssociation, List<MAGAObject>> templateAssociations = null;
 
+	private Map<String, Object> pristineIndexValues = new THashMap<>();
 
 	@Override
 	public int hashCode() {
@@ -45,7 +54,20 @@ public abstract class MAGAObject implements Serializable, Cloneable {
 			return false;
 		return true;
 	}
-	
-	
-	
+
+	public Map<String, Object> getPristineIndexValues() {
+		return pristineIndexValues;
+	}
+
+	/**
+	 * We want to keep around old versions of indexed values so we can properly dirty indexes when this object changes
+	 */
+	public void savePristineIndexValues() {
+		List<String> indexedFieldNames = ReflectionUtils.getIndexedColumns(getClass());
+
+		for (String indexedFieldName : indexedFieldNames) {
+			pristineIndexValues.put(indexedFieldName, ReflectionUtils.getFieldValue(this, indexedFieldName));
+		}
+	}
+
 }

@@ -47,7 +47,7 @@ public class HashMapCache extends Cache {
 
 	@Override
 	public void dirtyImpl(String key) {
-		System.out.println("Dirty: " + key);
+		//System.out.println("Dirty: " + key);
 		cacheData.dirties++;
 		data.put(key, null);
 
