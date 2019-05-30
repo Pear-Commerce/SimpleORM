@@ -12,6 +12,6 @@ public class RandomIDGen extends IDGen {
 
     @Override
     public long getNext() {
-        return (UUID.randomUUID().hashCode() & 0x1FFFFF) << 32 + UUID.randomUUID().hashCode();
+        return ((long)UUID.randomUUID().hashCode() & 0x1FFFFF) << 32  | Math.abs(UUID.randomUUID().hashCode());
     }
 }

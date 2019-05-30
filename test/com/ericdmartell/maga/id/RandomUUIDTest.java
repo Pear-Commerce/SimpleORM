@@ -21,7 +21,7 @@ public class RandomUUIDTest {
             long uuid = gen.getNext();
             Assert.assertTrue(set.add(uuid));
             // Check for Javascript compatibility
-            Assert.assertEquals(0, uuid >> (64-53));
+            Assert.assertEquals(0, uuid >>> 53);
         }
     }
 
