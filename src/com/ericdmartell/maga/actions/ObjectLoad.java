@@ -16,18 +16,12 @@ import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.JDBCUtil;
 import com.ericdmartell.maga.utils.MAGAException;
 import com.ericdmartell.maga.utils.ReflectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
-public class ObjectLoad {
+public class ObjectLoad extends MAGAAction {
 
-	private DataSource dataSource;
-	private MAGALoadTemplate template;
-	private MAGACache cache;
-
-	public ObjectLoad(DataSource dataSource, MAGACache cache, MAGA maga,
-			MAGALoadTemplate template) {
-		this.dataSource = dataSource;
-		this.cache = cache;
-		this.template = template;
+	public ObjectLoad(DataSource dataSource, MAGACache cache, MAGA maga, MAGALoadTemplate template) {
+		super(dataSource, cache, maga, template);
 	}
 
 	public List<MAGAObject> loadTemplate(MAGALoadTemplate template) {
@@ -47,15 +41,20 @@ public class ObjectLoad {
 	}
 
 	public List<MAGAObject> loadWhereExtra(Class clazz, String where, String extra, Object... params) {
+		List<MAGAObject> ret = load(clazz, loadIdsWhereExtra(clazz, where, extra, params));
+		return ret;
+	}
+
+	public List<Long> loadIdsWhereExtra(Class clazz, String where, String extra, Object... params) {
 		Connection connection = JDBCUtil.getConnection(dataSource);
 		try {
-			ResultSet rst = JDBCUtil.executeQuery(connection, "select id from `" + clazz.getSimpleName() + String.format("` where %s %s", where, extra), params);
+			String sql = "select id from `" + clazz.getSimpleName() + String.format("` where %s %s", where, StringUtils.defaultString(extra, ""));
+			ResultSet rst = JDBCUtil.executeQuery(connection, sql, params);
 			List<Long> ids = new ArrayList<>();
 			while (rst.next()) {
 				ids.add(rst.getLong(1));
 			}
-			List<MAGAObject> ret = load(clazz, ids);
-			return ret;
+			return ids;
 		} catch (SQLException e) {
 			throw new MAGAException(e);
 		} finally {
@@ -111,6 +110,10 @@ public class ObjectLoad {
 			cache.setObjects(dbObjects, template);
 
 			ret.addAll(dbObjects);
+		}
+
+		for (MAGAObject object : ret) {
+			object.savePristineIndexValues();
 		}
 
 		// We went to memcached, we went to the db, and we still have ids left

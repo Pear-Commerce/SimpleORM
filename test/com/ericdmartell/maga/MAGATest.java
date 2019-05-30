@@ -26,7 +26,7 @@ import org.junit.experimental.theories.suppliers.TestedOn;
 
 
 public class MAGATest {
-	private static DataSource dataSource;
+	protected static DataSource dataSource;
 	private static MemcachedClient client;
 	@BeforeClass
 	public static void setUp() throws Exception {
@@ -56,6 +56,10 @@ public class MAGATest {
 		dataSource.setPassword(password);
 		dataSource.setServerName("localhost");
 		return dataSource;
+	}
+
+	protected MAGA getMAGA() {
+		return new MAGA(dataSource, new HashMapCache(10_000));
 	}
 
 	@Test
@@ -92,7 +96,7 @@ public class MAGATest {
 		long testId = obj1.id + 1;
 		Obj1 obj2 = new Obj1();
 		obj2.id = testId;
-		new ObjectUpdate(dataSource, orm.cache, orm).addSQL(obj2);
+		new ObjectUpdate(dataSource, orm.cache, orm, null).addSQL(obj2);
 		Assert.assertEquals(testId, obj2.id);
 		Assert.assertEquals(obj2.id, orm.load(Obj1.class, obj2.id).id);
 
@@ -100,7 +104,7 @@ public class MAGATest {
 		try {
 			Obj1 obj3 = new Obj1();
 			obj3.id = testId;
-			new ObjectUpdate(dataSource, orm.cache, orm).addSQL(obj3);
+			new ObjectUpdate(dataSource, orm.cache, orm, null).addSQL(obj3);
 			throw new AssertionError("should not be allowed to save twice");
 		} catch (RuntimeException e) {
 			// expected
@@ -548,7 +552,7 @@ public class MAGATest {
 		IdGenEnt obj3 = new IdGenEnt();
 		long testId = System.currentTimeMillis();
 		obj3.id = testId;
-		new ObjectUpdate(dataSource, orm.cache, orm).addSQL(obj3);
+		new ObjectUpdate(dataSource, orm.cache, orm, null).addSQL(obj3);
 		Assert.assertNotNull(orm.load(IdGenEnt.class, testId));
 
 		orm = new MAGA(dataSource, new MemcachedCache(client), null, new LongUUIDGen(1));
@@ -565,7 +569,7 @@ public class MAGATest {
 		IdGenEnt obj5 = new IdGenEnt();
 		testId = System.currentTimeMillis();
 		obj5.id = testId;
-		new ObjectUpdate(dataSource, orm.cache, orm).addSQL(obj5);
+		new ObjectUpdate(dataSource, orm.cache, orm, null).addSQL(obj5);
 		Assert.assertNotNull(orm.load(IdGenEnt.class, testId));
 
 		NoIdGenEnt obj6 = new NoIdGenEnt();
@@ -578,7 +582,7 @@ public class MAGATest {
 		IdGenEnt obj8 = new IdGenEnt();
 		testId = System.currentTimeMillis();
 		obj8.id = testId;
-		new ObjectUpdate(dataSource, orm.cache, orm).addSQL(obj8);
+		new ObjectUpdate(dataSource, orm.cache, orm, null).addSQL(obj8);
 		Assert.assertNotNull(orm.load(IdGenEnt.class, testId));
 	}
 

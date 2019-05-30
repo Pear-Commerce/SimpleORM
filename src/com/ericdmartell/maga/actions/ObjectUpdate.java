@@ -8,6 +8,7 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -16,22 +17,18 @@ import com.ericdmartell.maga.annotations.MAGATimestampID;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.cache.MAGACache;
 import com.ericdmartell.maga.id.IDGen;
+import com.ericdmartell.maga.objects.MAGALoadTemplate;
 import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.*;
 
 import gnu.trove.map.hash.THashMap;
 
-public class ObjectUpdate {
+public class ObjectUpdate extends MAGAAction {
 
     private static Map<Class, Boolean> autoId = new THashMap<>();
-    private final DataSource dataSource;
-    private       MAGACache  cache;
-    private       MAGA       maga;
 
-    public ObjectUpdate(DataSource dataSource, MAGACache cache, MAGA maga) {
-        this.dataSource = dataSource;
-        this.maga = maga;
-        this.cache = cache;
+    public ObjectUpdate(DataSource dataSource, MAGACache cache, MAGA maga, MAGALoadTemplate template) {
+        super(dataSource, cache, maga, template);
     }
 
     public void update(final MAGAObject obj) {
@@ -43,6 +40,7 @@ public class ObjectUpdate {
             addSQL(obj);
             cache.dirtyObject(obj);
         } else {
+            // TODO(alex): we can replace this with keeping a set of pristine join fields
             oldObj = maga.load(obj.getClass(), obj.id);
             // If the object being updated has a join column, an old object
             // might have been joined with it. We
@@ -50,9 +48,11 @@ public class ObjectUpdate {
             for (MAGAAssociation assoc : affectedAssociations) {
                 biDirectionalDirty(obj, assoc);
             }
+            dirtyIndexes(obj);
             // Update the db after we've done our dirtying.
             updateSQL(obj);
             cache.dirtyObject(obj);
+            obj.savePristineIndexValues();
         }
 
         for (MAGAAssociation assoc : affectedAssociations) {
@@ -75,6 +75,25 @@ public class ObjectUpdate {
 
         }
         HistoryUtil.recordHistory(oldObj, obj, maga, dataSource);
+    }
+
+    /**
+     * Dirty the previous index values and the current index values for an object.
+     */
+    private void dirtyIndexes(MAGAObject obj) {
+        IndexLoad                      indexAction           = new IndexLoad(dataSource, cache, maga, null);
+        Map<String, Object> pristineIndexValues = obj.getPristineIndexValues();
+        for (String indexName : ReflectionUtils.getIndexedColumns(obj.getClass())) {
+            Object currentValue = ReflectionUtils.getFieldValue(obj, indexName);
+            indexAction.dirty(obj.getClass(), indexName, currentValue);
+
+            // minor optimization for newly-created objects (to avoid unnecessary dirtying of 'null' values)
+            if (pristineIndexValues.containsKey(indexName)) {
+                Object pristineValue = pristineIndexValues.get(indexName);
+                indexAction.dirty(obj.getClass(), indexName, pristineValue);
+            }
+        }
+
     }
 
     private void biDirectionalDirty(MAGAObject obj, MAGAAssociation association) {
@@ -158,6 +177,8 @@ public class ObjectUpdate {
             JDBCUtil.closeConnection(con);
         }
 
+        dirtyIndexes(obj);
+        obj.savePristineIndexValues();
     }
 
     private void updateSQL(MAGAObject obj) {

@@ -148,7 +148,8 @@ public class MAGACache extends Cache {
 		if (baseObject.templateAssociations == null) {
 			return null;
 		}
-		return baseObject.templateAssociations.get(association);
+		Map<MAGAAssociation, List<MAGAObject>> assocToObjects = baseObject.templateAssociations;
+		return assocToObjects.get(association);
 
 	}
 	

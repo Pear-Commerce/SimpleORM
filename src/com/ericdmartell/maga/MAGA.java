@@ -11,13 +11,7 @@ import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 
 import com.ericdmartell.cache.Cache;
-import com.ericdmartell.maga.actions.AssociationAdd;
-import com.ericdmartell.maga.actions.AssociationDelete;
-import com.ericdmartell.maga.actions.AssociationLoad;
-import com.ericdmartell.maga.actions.ObjectDelete;
-import com.ericdmartell.maga.actions.ObjectLoad;
-import com.ericdmartell.maga.actions.ObjectUpdate;
-import com.ericdmartell.maga.actions.SchemaSync;
+import com.ericdmartell.maga.actions.*;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.cache.MAGACache;
 import com.ericdmartell.maga.id.IDGen;
@@ -113,20 +107,34 @@ public class MAGA {
 		return (List<T>) new ObjectLoad(dataSource, cache, this, template).loadWhereExtra(clazz, where, extra, params);
 	}
 
+	public <T extends MAGAObject> List<T> loadByIndex(Class<T> clazz, String columnName, Object value) {
+		List<Long> ids = loadIdsByIndex(clazz, columnName, value);
+		System.out.println(ids);
+		return load(clazz, ids);
+	}
+
+	public <T extends MAGAObject> T loadByIndexSingle(Class<T> clazz, String columnName, Object value) {
+		List<T> objects = load(clazz, loadIdsByIndex(clazz, columnName, value));
+		return objects.isEmpty() ? null : objects.get(0);
+	}
+
+	public <T extends MAGAObject> List<Long> loadIdsByIndex(Class<T> clazz, String columnName, Object value) {
+		return new IndexLoad(dataSource, cache, this, template).load(clazz, columnName, value);
+	}
+
 	public List<MAGAObject> loadTemplate(MAGALoadTemplate template) {
 		return new ObjectLoad(dataSource, cache, this, template).loadTemplate(template);
 	}
 
 	public void save(MAGAObject toSave) {
 		throwExceptionIfCantSave(toSave);
-		new ObjectUpdate(dataSource, cache, this).update(toSave);
+		new ObjectUpdate(dataSource, cache, this, null).update(toSave);
 	}
 
 	public void delete(MAGAObject toDelete) {
 		throwExceptionIfCantSave(toDelete);
 		throwExceptionIfObjectUnsaved(toDelete);
 		new ObjectDelete(dataSource, cache, this).delete(toDelete);
-		;
 	}
 
 	public List loadAssociatedObjects(MAGAObject baseObject, MAGAAssociation association) {
@@ -191,5 +199,17 @@ public class MAGA {
 
 	public <T extends MAGAObject> List<T> loadWhere(Class<T> clazz, String where, Object... params) {
 		return new AssociationLoad(dataSource, cache, this, template).loadWhere(clazz, where, params);
+	}
+
+	public ObjectLoad buildObjectLoad() {
+		return new ObjectLoad(dataSource, cache, this, template);
+	}
+
+	public AssociationLoad buildAssociationLoad() {
+		return new AssociationLoad(dataSource, cache, this, template);
+	}
+
+	public ObjectUpdate buildObjectUpdate() {
+		return new ObjectUpdate(dataSource, cache, this, null);
 	}
 }

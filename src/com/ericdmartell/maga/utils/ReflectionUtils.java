@@ -1,7 +1,6 @@
 package com.ericdmartell.maga.utils;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.util.*;
@@ -14,16 +13,15 @@ import gnu.trove.map.hash.THashMap;
 public class ReflectionUtils {
 	// An in-memory cache because inspection is slow.
 
-	private static Map<Class<MAGAObject>, Map<String, Field>> classesToFieldNamesAndFields = new THashMap<>();
-	private static Map<Class<MAGAObject>, Map<String, Class>> classesToFieldNamesAndTypes = new THashMap<>();
-	private static Map<Class, List<String>> indexes = new THashMap<>();
-	public static Set<Class> standardClasses = new HashSet<>(Arrays.asList(new Class[] {
+	private static Map<Class<MAGAObject>, Map<String, Field>> classesToFieldNamesToFields        = new THashMap<>();
+	private static Map<Class<MAGAObject>, Map<String, Class>> classesToFieldNamesAndTypes        = new THashMap<>();
+	private static Map<Class, List<String>>                   classesToIndexedFieldNames         = new THashMap<>();
+	public static Set<Class>                                  standardClasses                    = new HashSet<>(Arrays.asList(new Class[] {
 		int.class, Integer.class, BigDecimal.class, String.class, long.class, Long.class, Date.class, Boolean.class, boolean.class
 	}));
-	
-	
+
 	public static Collection<String> getFieldNames(Class clazz) {
-		// Lazily populating classesToFieldNamesAndFields since 2016.
+		// Lazily populating classesToFieldNamesToFields since 2016.
 		if (!classesToFieldNamesAndTypes.containsKey(clazz)) {
 			buildIndex(clazz);
 		}
@@ -37,15 +35,13 @@ public class ReflectionUtils {
 		}
 		return classesToFieldNamesAndTypes.get(clazz).get(fieldName);
 	}
-	
-	
 			
 	public static boolean setFieldValue(MAGAObject obj, String fieldName, Object value) {
 		if (!classesToFieldNamesAndTypes.containsKey(obj.getClass())) {
 			buildIndex(obj.getClass());
 		}
 		try {
-			Field field = classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName);
+			Field field = classesToFieldNamesToFields.get(obj.getClass()).get(fieldName);
 			Class fieldClass = getFieldType(obj.getClass(), fieldName);
 			
 			if (field == null) {
@@ -88,10 +84,8 @@ public class ReflectionUtils {
 		}
 
 		return true;
-
 	}
-	
-	
+
 	public static Object getFieldValue(MAGAObject obj, String fieldName) {
 		try {
 		if (!classesToFieldNamesAndTypes.containsKey(obj.getClass())) {
@@ -102,7 +96,7 @@ public class ReflectionUtils {
 		}
 
 		Object ret;
-		Field field = classesToFieldNamesAndFields.get(obj.getClass()).get(fieldName);
+		Field field = classesToFieldNamesToFields.get(obj.getClass()).get(fieldName);
 		Class fieldType = getFieldType(obj.getClass(), fieldName);
 		try {
 			if (field == null) {
@@ -152,7 +146,7 @@ public class ReflectionUtils {
 		if (!classesToFieldNamesAndTypes.containsKey(clazz)) {
 			buildIndex(clazz);
 		}
-		return indexes.get(clazz);
+		return classesToIndexedFieldNames.get(clazz);
 	}
 
 	public static List<Field> getAllFields(Class<?> type) {
@@ -167,6 +161,7 @@ public class ReflectionUtils {
 	private static void buildIndex(Class clazz) {
 		
 		Map<String, Field> fieldNamesToField = new THashMap<>();
+		Map<String, Field> fieldNamesToIndexedField = new THashMap<>();
 		Map<String, Class> fieldNamesToType = new THashMap<>();
 		List<String> indexedColumns = new ArrayList<>();
 		
@@ -179,6 +174,7 @@ public class ReflectionUtils {
 				MAGAORMField anno = field.getAnnotation(MAGAORMField.class);
 				if (anno.isIndex()) {
 					indexedColumns.add(field.getName());
+					fieldNamesToIndexedField.put(field.getName(), field);
 				}
 			}
 		}
@@ -188,9 +184,8 @@ public class ReflectionUtils {
 		} catch (NoSuchFieldException | SecurityException e) {
 			throw new MAGAException(e);
 		}
-		indexes.put(clazz, indexedColumns);
-
-		classesToFieldNamesAndFields.put(clazz, fieldNamesToField);
+		classesToIndexedFieldNames.put(clazz, indexedColumns);
+		classesToFieldNamesToFields.put(clazz, fieldNamesToField);
 		classesToFieldNamesAndTypes.put(clazz, fieldNamesToType);
 	}
 

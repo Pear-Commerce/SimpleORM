@@ -21,7 +21,7 @@ public class HashMapCache extends Cache {
 
 	@Override
 	public Object getImpl(String key) {
-		//System.out.println("Get: " + key);
+		System.out.println("Get: " + key);
 		Object ret = cloneObject(data.get(key));
 		if (ret != null) {
 			cacheData.hits++;
@@ -33,7 +33,7 @@ public class HashMapCache extends Cache {
 
 	@Override
 	public void setImpl(String key, Object val) {
-		//System.out.println("Set: " + key);
+		System.out.println("Set: " + key);
 		cacheData.sets++;
 		data.put(key, cloneObject(val));
 
@@ -55,7 +55,7 @@ public class HashMapCache extends Cache {
 
 	@Override
 	public Map<String, Object> getBulkImpl(List<String> keys) {
-		//System.out.println("Get Bulk: " + keys);
+		System.out.println("Get Bulk: " + keys);
 		Map<String, Object> ret = new HashMap<>();
 		for (String key : keys) {
 			if (data.get(key) != null) {
