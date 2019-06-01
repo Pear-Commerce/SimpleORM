@@ -7,21 +7,16 @@ import javax.sql.DataSource;
 import com.ericdmartell.maga.MAGA;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.cache.MAGACache;
+import com.ericdmartell.maga.objects.MAGALoadTemplate;
 import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.HistoryUtil;
 import com.ericdmartell.maga.utils.JDBCUtil;
 import com.ericdmartell.maga.utils.ReflectionUtils;
 
-public class AssociationDelete {
+public class AssociationDelete extends MAGAAction {
 
-	private DataSource dataSource;
-	private MAGACache cache;
-	private MAGA maga;
-
-	public AssociationDelete(DataSource dataSource, MAGACache cache, MAGA maga) {
-		this.dataSource = dataSource;
-		this.cache = cache;
-		this.maga = maga;
+	public AssociationDelete(DataSource dataSource, MAGACache cache, MAGA maga, MAGALoadTemplate template) {
+		super(dataSource, cache, maga, template);
 	}
 
 	public void delete(MAGAObject obj, MAGAAssociation association) {

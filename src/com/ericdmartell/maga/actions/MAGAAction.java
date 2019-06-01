@@ -13,7 +13,7 @@ public abstract class MAGAAction {
     protected MAGACache        cache;
     protected MAGA             maga;
 
-    public MAGAAction(DataSource dataSource, MAGACache cache, MAGA maga,
+    protected MAGAAction(DataSource dataSource, MAGACache cache, MAGA maga,
                       MAGALoadTemplate template) {
         this.dataSource = dataSource;
         this.cache = cache;

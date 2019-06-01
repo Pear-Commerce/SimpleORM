@@ -22,18 +22,10 @@ import com.ericdmartell.maga.utils.ReflectionUtils;
 
 import gnu.trove.map.hash.THashMap;
 
-public class AssociationLoad {
-	private DataSource dataSource;
-	private MAGALoadTemplate template;
-	private MAGACache cache;
-	private MAGA maga;
+public class AssociationLoad extends MAGAAction {
 
-	public AssociationLoad(DataSource dataSource, MAGACache cache, MAGA maga,
-			MAGALoadTemplate template) {
-		this.dataSource = dataSource;
-		this.cache = cache;
-		this.maga = maga;
-		this.template = template;
+	public AssociationLoad(DataSource dataSource, MAGACache cache, MAGA maga, MAGALoadTemplate template) {
+		super(dataSource, cache, maga, template);
 	}
 
 	public List<MAGAObject> load(MAGAObject obj, MAGAAssociation association) {
