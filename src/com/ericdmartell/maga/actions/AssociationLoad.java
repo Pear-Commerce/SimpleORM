@@ -188,11 +188,11 @@ public class AssociationLoad extends MAGAAction {
 		}
 	}
 	
-	public List loadWhereHasClassWithJoinColumn(Class clazz) {
+	public List<MAGAAssociation> loadWhereHasClassWithJoinColumn(Class clazz) {
 		if (classToLoadColumnAssocs == null) {
 			initializeClassToAssocs();
 		}
-		List ret = classToLoadColumnAssocs.get(clazz);
+		List<MAGAAssociation> ret = classToLoadColumnAssocs.get(clazz);
 		if (ret == null) {
 			return new ArrayList<>();
 		}

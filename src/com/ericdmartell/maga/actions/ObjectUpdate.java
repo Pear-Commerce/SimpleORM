@@ -97,7 +97,6 @@ public class ObjectUpdate extends MAGAAction {
     }
 
     private void biDirectionalDirty(MAGAObject obj, MAGAAssociation association) {
-
         List<MAGAObject> otherSide = maga.loadAssociatedObjects(obj, association);
         cache.dirtyObject(obj);
         for (MAGAObject other : otherSide) {
