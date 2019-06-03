@@ -13,6 +13,7 @@ import javax.sql.DataSource;
 import com.ericdmartell.cache.Cache;
 import com.ericdmartell.maga.actions.*;
 import com.ericdmartell.maga.associations.MAGAAssociation;
+import com.ericdmartell.maga.cache.HashMapCache;
 import com.ericdmartell.maga.cache.MAGACache;
 import com.ericdmartell.maga.id.IDGen;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;

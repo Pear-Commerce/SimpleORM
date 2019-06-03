@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class IndexTestBase extends BaseMAGATest {
+public class IndexTest extends BaseMAGATest {
 
     public static class IndexTestObject extends MAGAObject<IndexTestObject> {
 
@@ -122,5 +122,4 @@ public class IndexTestBase extends BaseMAGATest {
         Assert.assertEquals(2, objects.size());
 
     }
-
 }

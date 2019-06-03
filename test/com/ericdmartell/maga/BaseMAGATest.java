@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 
 import javax.sql.DataSource;
 
+import com.ericdmartell.maga.cache.MemcachedCache;
 import org.junit.BeforeClass;
 
 import com.ericdmartell.maga.utils.JDBCUtil;
@@ -13,9 +14,9 @@ import net.spy.memcached.MemcachedClient;
 
 
 public abstract class BaseMAGATest {
-	private static DataSource      dataSource;
-	private static MemcachedCache  mcCache;
-	private static MAGA            basicMAGA;
+	private static DataSource     dataSource;
+	private static MemcachedCache mcCache;
+	private static MAGA           basicMAGA;
 
 	@BeforeClass
 	public static void setUp() throws Exception {

@@ -6,12 +6,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.util.Arrays;
 
 public class IndexCacheKey {
-    public static final ThreadLocal<IndexCacheKey> tl = new ThreadLocal<IndexCacheKey>() {
-        @Override
-        protected IndexCacheKey initialValue() {
-            return new IndexCacheKey();
-        }
-    };
+    public static final ThreadLocal<IndexCacheKey> tl = ThreadLocal.withInitial(() -> new IndexCacheKey());
 
     public String[] key = new String[3];
     public int hash = 0;
@@ -56,6 +51,7 @@ public class IndexCacheKey {
                         && ObjectUtils.equals(objectKey.value, value);
             }
         }
+
         return false;
     }
 

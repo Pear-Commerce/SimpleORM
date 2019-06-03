@@ -1,4 +1,4 @@
-package com.ericdmartell.maga;
+package com.ericdmartell.maga.cache;
 
 import java.lang.reflect.Field;
 import java.util.*;
