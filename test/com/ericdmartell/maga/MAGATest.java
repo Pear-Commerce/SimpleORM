@@ -96,7 +96,7 @@ public class MAGATest {
 		long testId = obj1.id + 1;
 		Obj1 obj2 = new Obj1();
 		obj2.id = testId;
-		new ObjectUpdate(dataSource, orm.cache, orm, null).addSQL(obj2);
+		orm.buildObjectUpdate().addSQL(obj2);
 		Assert.assertEquals(testId, obj2.id);
 		Assert.assertEquals(obj2.id, orm.load(Obj1.class, obj2.id).id);
 
@@ -104,7 +104,7 @@ public class MAGATest {
 		try {
 			Obj1 obj3 = new Obj1();
 			obj3.id = testId;
-			new ObjectUpdate(dataSource, orm.cache, orm, null).addSQL(obj3);
+			orm.buildObjectUpdate().addSQL(obj3);
 			throw new AssertionError("should not be allowed to save twice");
 		} catch (RuntimeException e) {
 			// expected
@@ -552,7 +552,7 @@ public class MAGATest {
 		IdGenEnt obj3 = new IdGenEnt();
 		long testId = System.currentTimeMillis();
 		obj3.id = testId;
-		new ObjectUpdate(dataSource, orm.cache, orm, null).addSQL(obj3);
+		orm.buildObjectUpdate().addSQL(obj3);
 		Assert.assertNotNull(orm.load(IdGenEnt.class, testId));
 
 		orm = new MAGA(dataSource, new MemcachedCache(client), null, new LongUUIDGen(1));
@@ -569,7 +569,7 @@ public class MAGATest {
 		IdGenEnt obj5 = new IdGenEnt();
 		testId = System.currentTimeMillis();
 		obj5.id = testId;
-		new ObjectUpdate(dataSource, orm.cache, orm, null).addSQL(obj5);
+		orm.buildObjectUpdate().addSQL(obj5);
 		Assert.assertNotNull(orm.load(IdGenEnt.class, testId));
 
 		NoIdGenEnt obj6 = new NoIdGenEnt();
@@ -582,7 +582,7 @@ public class MAGATest {
 		IdGenEnt obj8 = new IdGenEnt();
 		testId = System.currentTimeMillis();
 		obj8.id = testId;
-		new ObjectUpdate(dataSource, orm.cache, orm, null).addSQL(obj8);
+		orm.buildObjectUpdate().addSQL(obj8);
 		Assert.assertNotNull(orm.load(IdGenEnt.class, testId));
 	}
 

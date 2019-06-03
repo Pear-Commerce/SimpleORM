@@ -73,7 +73,8 @@ public class IndexTest extends MAGATest {
         Assert.assertEquals(hits = hits + 1, orm.cache.hits + orm.cache.bulkHits);
         // Note: updating also causes a miss when trying to load template_dependencies
         Assert.assertEquals(misses = misses + 1, orm.cache.misses + orm.cache.bulkMisses);
-        Assert.assertEquals(sets = sets + 0, orm.cache.sets);
+        // 1 new set since MAGA is set to writeThroughCacheOnUpdate
+        Assert.assertEquals(sets = sets + 1, orm.cache.sets);
 
         objects = orm.loadByIndex(IndexTestObject.class, "name", oldName);
         // no new hits because the name has changed!
@@ -85,10 +86,12 @@ public class IndexTest extends MAGATest {
         Assert.assertEquals(0, objects.size());
 
         objects = orm.loadByIndex(IndexTestObject.class, "name", object.name);
-        // no new hits, since the index and the object are newly loaded
-        Assert.assertEquals(hits = hits + 0, orm.cache.hits + orm.cache.bulkHits);
-        Assert.assertEquals(misses = misses + 2, orm.cache.misses + orm.cache.bulkMisses);
-        Assert.assertEquals(sets = sets + 2, orm.cache.sets);
+        // 1 new hits, the object was set-on-write
+        Assert.assertEquals(hits = hits + 1, orm.cache.hits + orm.cache.bulkHits);
+        // 1 new miss for the index
+        Assert.assertEquals(misses = misses + 1, orm.cache.misses + orm.cache.bulkMisses);
+        // 1 new set for the index
+        Assert.assertEquals(sets = sets + 1, orm.cache.sets);
         Assert.assertEquals(1, objects.size());
 
         objects = orm.loadByIndex(IndexTestObject.class, "name", object.name);
@@ -106,18 +109,19 @@ public class IndexTest extends MAGATest {
         femaleVersion.gender = "female";
         System.out.println("SAVING NEW FEMALE " + femaleVersion.name);
         orm.buildObjectUpdate().addSQL(femaleVersion);
-        // Sanity check, nothing changes in creation of new object
+        // Sanity check changes during creation of new object
         Assert.assertEquals(hits = hits + 0, orm.cache.hits + orm.cache.bulkHits);
         Assert.assertEquals(misses = misses + 0, orm.cache.misses + orm.cache.bulkMisses);
-        Assert.assertEquals(sets = sets + 0, orm.cache.sets);
+        // one new set because MAGA is set to writeThroughCacheOnUpdate = true
+        Assert.assertEquals(sets = sets + 1, orm.cache.sets);
 
         objects = orm.loadByIndex(IndexTestObject.class, "name", femaleVersion.name);
-        // 1 new hit for the male object
-        Assert.assertEquals(hits = hits + 1, orm.cache.hits + orm.cache.bulkHits);
-        // 2 new misses for the index and the female object
-        Assert.assertEquals(misses = misses + 2, orm.cache.misses + orm.cache.bulkMisses);
-        // 2 new sets for the index and the female object
-        Assert.assertEquals(sets = sets + 2, orm.cache.sets);
+        // 2 new hits: 1 for the male object, 1 for the female object
+        Assert.assertEquals(hits = hits + 2, orm.cache.hits + orm.cache.bulkHits);
+        // 1 new miss for the index
+        Assert.assertEquals(misses = misses + 1, orm.cache.misses + orm.cache.bulkMisses);
+        // 1 new sets for the index
+        Assert.assertEquals(sets = sets + 1, orm.cache.sets);
         Assert.assertEquals(2, objects.size());
 
     }

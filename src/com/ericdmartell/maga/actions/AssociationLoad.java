@@ -22,16 +22,21 @@ import com.ericdmartell.maga.utils.ReflectionUtils;
 
 import gnu.trove.map.hash.THashMap;
 
-public class AssociationLoad extends MAGAAction {
+public class AssociationLoad extends MAGAAwareContext {
 
+	@Deprecated
 	public AssociationLoad(DataSource dataSource, MAGACache cache, MAGA maga, MAGALoadTemplate template) {
-		super(dataSource, cache, maga, template);
+		super(maga);
+	}
+
+	public AssociationLoad(MAGA maga) {
+		super(maga);
 	}
 
 	public List<MAGAObject> load(MAGAObject obj, MAGAAssociation association) {
 		// Before even going to memcached, did this object come out of a
-		// template? If so we have associations stored on the object itself.
-		List<MAGAObject> ret = cache.getAssociatedObjectsForTemplate(obj, association);
+		// loadTemplate? If so we have associations stored on the object itself.
+		List<MAGAObject> ret = getCache().getAssociatedObjectsForTemplate(obj, association);
 
 		if (ret != null) {
 			return ret;
@@ -41,15 +46,15 @@ public class AssociationLoad extends MAGAAction {
 
 			// Load ids from the other side of the assoc and then bulk load the
 			// objects themselves
-			ret = maga.load(classToGet, loadIds(obj, association));
+			ret = getMAGA().load(classToGet, loadIds(obj, association));
 
-			// If we're running in a template, cache the result on the object
+			// If we're running in a loadTemplate, cache the result on the object
 			// itself.
-			if (template != null) {
+			if (getLoadTemplate() != null) {
 				if (obj.templateAssociations == null) {
 					obj.templateAssociations = new THashMap<>();
 				}
-				cache.cacheAssociatedObjectsForTemplate(obj, association, ret);
+				getCache().cacheAssociatedObjectsForTemplate(obj, association, ret);
 			}
 			return ret;
 		}
@@ -58,14 +63,14 @@ public class AssociationLoad extends MAGAAction {
 
 	public <T extends MAGAObject> List<T> loadWhere(Class<T> clazz, String where, Object... params) {
 		//TODO: Add some caching for this, but then we'd have to check every object add and update to see if the associated where returns new results.
-		List<Long> ids = JDBCUtil.executeQueryAndReturnLongs(dataSource, "select id from `" + clazz.getSimpleName() + "` where " + where, params);
-		return maga.load(clazz, ids);
+		List<Long> ids = JDBCUtil.executeQueryAndReturnLongs(getDataSourceRead(), "select id from `" + clazz.getSimpleName() + "` where " + where, params);
+		return getMAGA().load(clazz, ids);
 		
 	}
 	
 	private List<Long> loadIds(MAGAObject obj, MAGAAssociation association) {
 		// Memcached
-		List<Long> ret = cache.getAssociatedIds(obj, association);
+		List<Long> ret = getCache().getAssociatedIds(obj, association);
 
 		if (ret == null) {
 			// Go to the database.
@@ -74,10 +79,10 @@ public class AssociationLoad extends MAGAAction {
 			} else if (association.type() == MAGAAssociation.ONE_TO_MANY) {
 				ret = getOneToManyFromDB(obj, association);
 			}
-			cache.setAssociatedIds(obj, association, ret, template);
+			getCache().setAssociatedIds(obj, association, ret, getLoadTemplate());
 		}
-		if (this.template != null) {
-			this.cache.addTemplateDependencyOnAssoc(obj, association, this.template);
+		if (getLoadTemplate() != null) {
+			getCache().addTemplateDependencyOnAssoc(obj, association, getLoadTemplate());
 		}
 		return ret;
 	}
@@ -92,7 +97,7 @@ public class AssociationLoad extends MAGAAction {
 		} else {
 			// We're on the many side of the one-many... The join data is right
 			// on the object... But it might be dirty so we refresh
-			obj = maga.load(obj.getClass(), obj.id);
+			obj = getMAGA().load(obj.getClass(), obj.id);
 			long val = 0;
 			val = (long) ReflectionUtils.getFieldValue(obj, association.class2Column());
 
@@ -107,7 +112,7 @@ public class AssociationLoad extends MAGAAction {
 		}
 
 		// Builds out list of ids from query.
-		Connection con = JDBCUtil.getConnection(dataSource);
+		Connection con = JDBCUtil.getConnection(getDataSourceRead());
 		try {
 			ResultSet rst = JDBCUtil.executeQuery(con, query, obj.id);
 			while (rst.next()) {
@@ -136,7 +141,7 @@ public class AssociationLoad extends MAGAAction {
 			whereColumn = association.class2().getSimpleName();
 			otherColumn = association.class1().getSimpleName();
 		}
-		Connection con = JDBCUtil.getConnection(dataSource);
+		Connection con = JDBCUtil.getConnection(getDataSourceRead());
 		try {
 			ResultSet rst = JDBCUtil.executeQuery(con,
 					"select distinct `" + otherColumn + "` from `" + tableName + "` where `" + whereColumn + "` = ?", obj.id);

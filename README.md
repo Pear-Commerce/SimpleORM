@@ -103,18 +103,18 @@ MAGA has the following methods:
 * **deleteAssociation(MAGAObject baseObject, MAGAObject otherObject, MAGAAssociation association)**: Removes the link between the provided objects by the association.
 * **deleteAssociations(MAGAObject baseObject, MAGAAssociation association)**: Removes the link between the provided object and all other objects defined by the association.
 * **schemaSync()**:  Updates the underlying database to match your MAGA class definitions.
-* **loadTemplate(MAGALoadTemplate template, Object... args)**: Uses a Load Template to return objects.
+* **loadTemplate(MAGALoadTemplate loadTemplate, Object... args)**: Uses a Load Template to return objects.
 
 # Using MAGALoadTemplates
 When every object and association exists in your cache, you'll never be going to your database, but you'll be making a lot of trips to your cache.  Considering the network overhead of accessing remote caches like Memcached, deserialization between the cache service and the JVM, etc, you might have a desire to further optimize your loads.
 
 When there is a common load in place that returns "a graph of objects and associations" (for lack of a better description), you can save this as a single entry in the cache, in addition to all the individual entries for each object and association.  We call this a **Load Template**.
 
-To create a load template, extent MAGALoadTemplate and implement the getKey() and run() methods.  Note that run can accept any number of parameters.  GetKey should be unique to each graph of returned data.  IE, if have a site that displays restaurant menus, your key would likely end up being "Menu" + (restaurant id), and would return all categories, menu items, etc.
+To create a load loadTemplate, extent MAGALoadTemplate and implement the getKey() and run() methods.  Note that run can accept any number of parameters.  GetKey should be unique to each graph of returned data.  IE, if have a site that displays restaurant menus, your key would likely end up being "Menu" + (restaurant id), and would return all categories, menu items, etc.
 
-After the first run, the entire graph of returned data will be cached as a single entry in the cache.  This means if you load out the template again, all object loads and association loads that existed within the original load of the template will require no farther trips to the cache or database.
+After the first run, the entire graph of returned data will be cached as a single entry in the cache.  This means if you load out the loadTemplate again, all object loads and association loads that existed within the original load of the loadTemplate will require no farther trips to the cache or database.
 
-When any dependent object or association is changed, the template will reload and return valid data.
+When any dependent object or association is changed, the loadTemplate will reload and return valid data.
 
 # Object History
 

@@ -18,20 +18,25 @@ import com.ericdmartell.maga.utils.MAGAException;
 import com.ericdmartell.maga.utils.ReflectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-public class ObjectLoad extends MAGAAction {
+public class ObjectLoad extends MAGAAwareContext {
 
+	@Deprecated
 	public ObjectLoad(DataSource dataSource, MAGACache cache, MAGA maga, MAGALoadTemplate template) {
-		super(dataSource, cache, maga, template);
+		super(maga);
+	}
+
+	public ObjectLoad(MAGA maga) {
+		super(maga);
 	}
 
 	public List<MAGAObject> loadTemplate(MAGALoadTemplate template) {
-		List<MAGAObject> ret = (List<MAGAObject>) cache.get(template.getKey());
+		List<MAGAObject> ret = (List<MAGAObject>) getCache().get(template.getKey());
 		if (ret != null) {
 			return ret;
 		} else {
-			ret = template.run(new MAGA(dataSource, cache, template));
+			ret = template.run(getMAGA());
 			// save our result for next fetch.
-			cache.set(template.getKey(), ret);
+			getCache().set(template.getKey(), ret);
 			return ret;
 		}
 	}
@@ -46,7 +51,7 @@ public class ObjectLoad extends MAGAAction {
 	}
 
 	public List<Long> loadIdsWhereExtra(Class clazz, String where, String extra, Object... params) {
-		Connection connection = JDBCUtil.getConnection(dataSource);
+		Connection connection = JDBCUtil.getConnection(getDataSourceRead());
 		try {
 			String sql = "select id from `" + clazz.getSimpleName() + String.format("` where %s %s", where, StringUtils.defaultString(extra, ""));
 			ResultSet rst = JDBCUtil.executeQuery(connection, sql, params);
@@ -92,7 +97,7 @@ public class ObjectLoad extends MAGAAction {
 		
 		
 		// Try getting them from memcached
-		List<MAGAObject> ret = cache.getObjects(clazz, toLoad);
+		List<MAGAObject> ret = getCache().getObjects(clazz, toLoad);
 
 		// Remove the ids we got from memcached before going to the database.
 		for (MAGAObject gotFromMemcached : ret) {
@@ -107,7 +112,7 @@ public class ObjectLoad extends MAGAAction {
 			}
 			
 			//We'll have them in the cache next time.
-			cache.setObjects(dbObjects, template);
+			getCache().setObjects(dbObjects, getLoadTemplate());
 
 			ret.addAll(dbObjects);
 		}
@@ -122,9 +127,9 @@ public class ObjectLoad extends MAGAAction {
 			// System.out.println("DB Misses for " + toLoad);
 		}
 		
-		if (this.template != null) {
+		if (getLoadTemplate() != null) {
 			for (MAGAObject object : ret) {
-				this.cache.addTemplateDependency(object, this.template);
+				getCache().addTemplateDependency(object, getLoadTemplate());
 			}
 		}
 		return ret;
@@ -138,7 +143,7 @@ public class ObjectLoad extends MAGAAction {
 
 		// Sql to bulk fetch all ids.
 		String sql = getSQL(clazz, fieldNames, ids);
-		Connection connection = JDBCUtil.getConnection(this.dataSource);
+		Connection connection = JDBCUtil.getConnection(getDataSourceRead());
 
 		try {
 			ResultSet rst = JDBCUtil.executeQuery(connection, sql, ids);

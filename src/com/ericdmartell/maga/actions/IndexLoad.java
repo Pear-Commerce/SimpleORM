@@ -9,20 +9,25 @@ import com.ericdmartell.maga.utils.IndexCacheKey;
 import javax.sql.DataSource;
 import java.util.List;
 
-public class IndexLoad extends MAGAAction {
+public class IndexLoad extends MAGAAwareContext {
 
+    @Deprecated
     public IndexLoad(DataSource dataSource, MAGACache cache, MAGA maga, MAGALoadTemplate template) {
-        super(dataSource, cache, maga, template);
+        super(maga);
+    }
+
+    public IndexLoad(MAGA maga) {
+        super(maga);
     }
 
     public <T extends MAGAObject> List<Long> load(Class<T> clazz, String columnName, Object value) {
         List<Long>          ids;
         final IndexCacheKey cacheKey = IndexCacheKey.getIndex(clazz, columnName, value);
 
-        ids = (List<Long>) cache.get(cacheKey.toString());
+        ids = (List<Long>) getCache().get(cacheKey.toString());
         if (ids == null) {
-            ids = new ObjectLoad(dataSource, cache, maga, template).loadIdsWhereExtra(clazz, String.format("`%s`=?", columnName), null, value);
-            cache.set(cacheKey.toString(), ids);
+            ids = new ObjectLoad(getMAGA()).loadIdsWhereExtra(clazz, String.format("`%s`=?", columnName), null, value);
+            getCache().set(cacheKey.toString(), ids);
         }
 
         return ids;
@@ -31,7 +36,7 @@ public class IndexLoad extends MAGAAction {
     public <T extends MAGAObject> void dirty(Class<T> aClass, String columnName, Object value) {
         System.out.println("Dirtying " + aClass + " " + columnName + "=" + value);
         final IndexCacheKey cacheKey = IndexCacheKey.getIndex(aClass, columnName, value);
-        cache.dirty(cacheKey.toString());
+        getCache().dirty(cacheKey.toString());
     }
 
 }

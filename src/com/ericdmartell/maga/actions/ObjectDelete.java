@@ -11,20 +11,25 @@ import com.ericdmartell.maga.objects.MAGALoadTemplate;
 import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.JDBCUtil;
 
-public class ObjectDelete extends MAGAAction {
+public class ObjectDelete extends MAGAAwareContext {
 
+	@Deprecated
 	public ObjectDelete(DataSource dataSource, MAGACache cache, MAGA maga, MAGALoadTemplate template) {
-		super(dataSource, cache, maga, template);
+		super(maga);
+	}
+
+	public ObjectDelete(MAGA maga) {
+		super(maga);
 	}
 
 	public void delete(MAGAObject obj) {
 		//Delete assocs and object itself.
-		List assocs = maga.loadWhereHasClass(MAGAAssociation.class);
+		List assocs = getMAGA().loadWhereHasClass(MAGAAssociation.class);
 		for (Object assoc : assocs) {
-			maga.deleteAssociations(obj, (MAGAAssociation) assoc);
+			getMAGA().deleteAssociations(obj, (MAGAAssociation) assoc);
 		}
-		JDBCUtil.executeUpdate("delete from `" + obj.getClass().getSimpleName() + "` where id = ?", dataSource, obj.id);
-		cache.dirtyObject(obj);
+		JDBCUtil.executeUpdate("delete from `" + obj.getClass().getSimpleName() + "` where id = ?", getDataSourceWrite(), obj.id);
+		getCache().dirtyObject(obj);
 	}
 	
 	

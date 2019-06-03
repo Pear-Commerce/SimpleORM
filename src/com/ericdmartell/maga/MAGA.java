@@ -15,7 +15,6 @@ import com.ericdmartell.maga.actions.*;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.cache.MAGACache;
 import com.ericdmartell.maga.id.IDGen;
-import com.ericdmartell.maga.id.LongUUIDGen;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;
 import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.JDBCUtil;
@@ -28,67 +27,140 @@ import gnu.trove.set.hash.THashSet;
 
 public class MAGA {
 
-	public IDGen idGen;
-	public DataSource dataSource;
-	public MAGACache cache;
-	public MAGALoadTemplate template;
+	public IDGen            idGen;
+	public DataSource       dataSourceWrite;
+	public DataSource       dataSourceRead;
+	public MAGACache        cache;
+	public MAGALoadTemplate loadTemplate;
+	public ObjectMapper		objectMapper;
+
+	private boolean writeThroughCacheOnUpdate = true;
 
 	public ThreadPoolExecutor executorPool = new ThreadPoolExecutor(50, 50, 10, TimeUnit.SECONDS,
 			new ArrayBlockingQueue<>(50));
-
-	public MAGA(DataSource dataSource, Cache cache, ObjectMapper objectMapper) {
-		init(dataSource, cache, objectMapper, null, null);
-	}
-	public MAGA(DataSource dataSource) {
-		init(dataSource, new HashMapCache(1000), null, null, null);
-	}
-
-	public MAGA(DataSource dataSource, Cache cache) {
-		init(dataSource, cache, null, null, null);
-	}
-
-	public MAGA(DataSource dataSource, Cache cache, MAGALoadTemplate template) {
-		init(dataSource, cache, null, template, null);
-	}
-
-	public MAGA(DataSource dataSource, Cache cache, MAGALoadTemplate template, IDGen idGen) {
-		init(dataSource, cache, null, template, idGen);
-	}
-
-	public MAGA(DataSource dataSource, Cache cache, ObjectMapper objectMapper, MAGALoadTemplate template, IDGen idGen) {
-		init(dataSource, cache, objectMapper, template, idGen);
-	}
-
-	private void init(DataSource dataSource, Cache cache, ObjectMapper objectMapper, MAGALoadTemplate template, IDGen idGen) {
-		this.idGen = idGen;
-		this.dataSource = dataSource;
-		this.cache = MAGACache.getInstance(cache);
-		this.template = template;
+	{
 		executorPool.submit((Runnable) () -> {
 			while (true) {
-				Set<TrackedConnection> reported = new THashSet<>();
+				Set<TrackedConnection> reported = null;
 				for (TrackedConnection connection : JDBCUtil.openConnections) {
 					if (new Date().getTime() - connection.date.getTime() >= 5000) {
 						System.out.println("Leaked Connection");
 						connection.stack.printStackTrace();
+						// avoid creating a new hashmap every loop
+						if (reported == null) {
+							reported = new THashSet<>();
+						}
 						reported.add(connection);
 					}
 				}
 				JDBCUtil.openConnections.removeAll(reported);
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(10_000);
 				} catch (InterruptedException e) {
 					throw new RuntimeException(e);
 				}
 			}
 		});
+	}
 
+	public MAGA(DataSource dataSourceReadWrite, Cache cache, ObjectMapper objectMapper) {
+		this.withDataSource(dataSourceReadWrite)
+				.withCache(cache)
+				.withObjectMapper(objectMapper);
+	}
+
+	/**
+	 * Warning: for backwards compat, this constructor defaults to a HashMapCache
+	 */
+	public MAGA(DataSource dataSourceReadWrite) {
+		this.withDataSource(dataSourceReadWrite)
+				.withHashMapCache();
+	}
+
+	public MAGA(DataSource dataSourceReadWrite, Cache cache) {
+		this.withDataSource(dataSourceReadWrite)
+				.withCache(cache);
+	}
+
+	public MAGA(DataSource dataSourceReadWrite, Cache cache, MAGALoadTemplate loadTemplate) {
+		this.withDataSource(dataSourceReadWrite)
+				.withCache(cache)
+				.withLoadTemplate(loadTemplate);
+	}
+
+	public MAGA(DataSource dataSourceReadWrite, Cache cache, MAGALoadTemplate loadTemplate, IDGen idGen) {
+		this.withDataSource(dataSourceReadWrite)
+				.withCache(cache)
+				.withLoadTemplate(loadTemplate)
+				.withIDGen(idGen);
+	}
+
+	public MAGA(DataSource dataSourceReadWrite, Cache cache, ObjectMapper objectMapper, MAGALoadTemplate loadTemplate, IDGen idGen) {
+		this.withDataSource(dataSourceReadWrite)
+				.withCache(cache)
+				.withObjectMapper(objectMapper)
+				.withLoadTemplate(loadTemplate)
+				.withIDGen(idGen);
+	}
+
+	public MAGA withHashMapCache() {
+		return withCache(new HashMapCache(1000));
+	}
+
+	public MAGA withIDGen(IDGen idGen) {
+		this.idGen = idGen;
+		return this;
+	}
+
+	public MAGA withLoadTemplate(MAGALoadTemplate loadTemplate) {
+		this.loadTemplate = loadTemplate;
+		return this;
+	}
+
+	public MAGA withCache(Cache cache) {
+		this.cache = MAGACache.getInstance(cache);
+		return this;
+	}
+
+	public MAGA withCache(MAGACache cache) {
+		this.cache = cache;
+		return this;
+	}
+
+	public MAGA withDataSource(DataSource dataSourceReadWrite) {
+		return this
+				.withDataSourceRead(dataSourceReadWrite)
+				.withDataSourceWrite(dataSourceReadWrite);
+	}
+
+	public MAGA withDataSourceWrite(DataSource dataSourceWrite) {
+		this.dataSourceWrite = dataSourceWrite;
+		return this;
+	}
+
+	public MAGA withDataSourceRead(DataSource dataSourceRead) {
+		this.dataSourceRead = dataSourceRead;
+		return this;
+	}
+
+	public MAGA withObjectMapper(ObjectMapper objectMapper) {
+		this.objectMapper = objectMapper;
 		// This is totally not thread-safe, but MAGA relies on JSONUtil for persistence, and
 		// I want to be able to customize JSONUtil from user code, so massive TODO here to make
 		// JSONUtil instance-scoped. -alex
 		if (objectMapper != null) {
 			JSONUtil.objectMapper = objectMapper;
 		}
+		return this;
+	}
+
+	public MAGA withWriteThroughCacheOnUpdate(boolean writeThroughCacheOnUpdate) {
+		this.writeThroughCacheOnUpdate = writeThroughCacheOnUpdate;
+		return this;
+	}
+
+	public boolean isWriteThroughCacheOnUpdate() {
+		return writeThroughCacheOnUpdate;
 	}
 
 	public <T extends MAGAObject> T load(Class<T> clazz, long id) {
@@ -109,7 +181,6 @@ public class MAGA {
 
 	public <T extends MAGAObject> List<T> loadByIndex(Class<T> clazz, String columnName, Object value) {
 		List<Long> ids = loadIdsByIndex(clazz, columnName, value);
-		System.out.println(ids);
 		return load(clazz, ids);
 	}
 
@@ -134,7 +205,7 @@ public class MAGA {
 	public void delete(MAGAObject toDelete) {
 		throwExceptionIfCantSave(toDelete);
 		throwExceptionIfObjectUnsaved(toDelete);
-		new ObjectDelete(dataSource, cache, this, null).delete(toDelete);
+		buildObjectDelete().delete(toDelete);
 	}
 
 	public List loadAssociatedObjects(MAGAObject baseObject, MAGAAssociation association) {
@@ -163,7 +234,7 @@ public class MAGA {
 	}
 
 	public void schemaSync() {
-		new SchemaSync(dataSource, cache).go();
+		new SchemaSync(dataSourceWrite, cache).go();
 	}
 
 	private void throwExceptionIfCantSave(MAGAObject object) {
@@ -202,7 +273,7 @@ public class MAGA {
 	private ObjectLoad objectLoad;
 	public ObjectLoad buildObjectLoad() {
 		if (objectLoad == null) {
-			objectLoad = new ObjectLoad(dataSource, cache, this, template);
+			objectLoad = new ObjectLoad(this);
 		}
 		return objectLoad;
 	}
@@ -210,7 +281,7 @@ public class MAGA {
 	private AssociationLoad associationLoad;
 	public AssociationLoad buildAssociationLoad() {
 		if (associationLoad == null) {
-			associationLoad = new AssociationLoad(dataSource, cache, this, template);
+			associationLoad = new AssociationLoad(this);
 		}
 		return associationLoad;
 	}
@@ -218,7 +289,7 @@ public class MAGA {
 	private ObjectUpdate objectUpdate;
 	public ObjectUpdate buildObjectUpdate() {
 		if (objectUpdate == null) {
-			objectUpdate = new ObjectUpdate(dataSource, cache, this, null);
+			objectUpdate = new ObjectUpdate(this);
 		}
 		return objectUpdate;
 	}
@@ -226,7 +297,7 @@ public class MAGA {
 	private AssociationAdd associationAdd;
 	public AssociationAdd buildAssociationAdd() {
 		if (associationAdd == null) {
-			associationAdd = new AssociationAdd(dataSource, cache, this, null);
+			associationAdd = new AssociationAdd(this);
 		}
 		return associationAdd;
 	}
@@ -234,7 +305,7 @@ public class MAGA {
 	private AssociationDelete associationDelete;
 	public AssociationDelete buildAssociationDelete() {
 		if (associationDelete == null) {
-			associationDelete = new AssociationDelete(dataSource, cache, this, null);
+			associationDelete = new AssociationDelete(this);
 		}
 		return associationDelete;
 	}
@@ -242,8 +313,16 @@ public class MAGA {
 	private IndexLoad indexLoad;
 	public IndexLoad buildIndexLoad()  {
 		if (indexLoad == null) {
-			indexLoad = new IndexLoad(dataSource, cache, this, template);
+			indexLoad = new IndexLoad(this);
 		}
 		return indexLoad;
+	}
+
+	private ObjectDelete objectDelete;
+	public ObjectDelete buildObjectDelete() {
+		if (objectDelete == null) {
+			objectDelete = new ObjectDelete(this);
+		}
+		return objectDelete;
 	}
 }

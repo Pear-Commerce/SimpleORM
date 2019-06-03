@@ -4,11 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -16,32 +14,36 @@ import com.ericdmartell.maga.MAGA;
 import com.ericdmartell.maga.annotations.MAGATimestampID;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.cache.MAGACache;
-import com.ericdmartell.maga.id.IDGen;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;
 import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.*;
 
 import gnu.trove.map.hash.THashMap;
 
-public class ObjectUpdate extends MAGAAction {
+public class ObjectUpdate extends MAGAAwareContext {
 
     private static Map<Class, Boolean> autoId = new THashMap<>();
 
+    @Deprecated
     public ObjectUpdate(DataSource dataSource, MAGACache cache, MAGA maga, MAGALoadTemplate template) {
-        super(dataSource, cache, maga, template);
+        super(maga);
+    }
+
+    public ObjectUpdate(MAGA maga) {
+        super(maga);
     }
 
     public void update(final MAGAObject obj) {
         // Object for history
         MAGAObject            oldObj               = null;
-        List<MAGAAssociation> affectedAssociations = maga.loadWhereHasClassWithJoinColumn(obj.getClass());
+        List<MAGAAssociation> affectedAssociations = getMAGA().loadWhereHasClassWithJoinColumn(obj.getClass());
         if (obj.id == 0) {
             // We're adding an object without an assigned id
             addSQL(obj);
-            cache.dirtyObject(obj);
+            getCache().dirtyObject(obj);
         } else {
             // TODO(alex): we can replace this with keeping a set of pristine join fields
-            oldObj = maga.load(obj.getClass(), obj.id);
+            oldObj = getMAGA().load(obj.getClass(), obj.id);
             // If the object being updated has a join column, an old object
             // might have been joined with it. We
             // Dirty those assocs.
@@ -51,7 +53,10 @@ public class ObjectUpdate extends MAGAAction {
             dirtyIndexes(obj);
             // Update the db after we've done our dirtying.
             updateSQL(obj);
-            cache.dirtyObject(obj);
+            getCache().dirtyObject(obj);
+            if (getMAGA().isWriteThroughCacheOnUpdate()) {
+                getCache().setObject(obj, getLoadTemplate());
+            }
             obj.savePristineIndexValues();
         }
 
@@ -74,14 +79,14 @@ public class ObjectUpdate extends MAGAAction {
             }
 
         }
-        HistoryUtil.recordHistory(oldObj, obj, maga, dataSource);
+        HistoryUtil.recordHistory(oldObj, obj, getMAGA(), getDataSourceWrite());
     }
 
     /**
      * Dirty the previous index values and the current index values for an object.
      */
     private void dirtyIndexes(MAGAObject obj) {
-        IndexLoad                      indexAction           = new IndexLoad(dataSource, cache, maga, null);
+        IndexLoad                      indexAction           = new IndexLoad(getMAGA());
         Map<String, Object> pristineIndexValues = obj.getPristineIndexValues();
         for (String indexName : ReflectionUtils.getIndexedColumns(obj.getClass())) {
             Object currentValue = ReflectionUtils.getFieldValue(obj, indexName);
@@ -97,13 +102,12 @@ public class ObjectUpdate extends MAGAAction {
     }
 
     private void biDirectionalDirty(MAGAObject obj, MAGAAssociation association) {
-        List<MAGAObject> otherSide = maga.loadAssociatedObjects(obj, association);
-        cache.dirtyObject(obj);
+        List<MAGAObject> otherSide = getMAGA().loadAssociatedObjects(obj, association);
+        getCache().dirtyObject(obj);
         for (MAGAObject other : otherSide) {
-            cache.dirtyAssoc(other, association);
+            getCache().dirtyAssoc(other, association);
         }
-        cache.dirtyAssoc(obj, association);
-
+        getCache().dirtyAssoc(obj, association);
     }
 
     public void addSQL(MAGAObject obj) {
@@ -117,8 +121,8 @@ public class ObjectUpdate extends MAGAAction {
         List<String> fieldNames = new ArrayList<>(ReflectionUtils.getFieldNames(obj.getClass()));
 
         if (obj.id == 0) {
-            if (genId && maga.idGen != null) {
-                obj.id = maga.idGen.getNext();
+            if (genId && getMAGA().idGen != null) {
+                obj.id = getMAGA().idGen.getNext();
             }
         }
 
@@ -148,7 +152,7 @@ public class ObjectUpdate extends MAGAAction {
 
         sql += fieldPlaceholders + ")";
 
-        Connection con = JDBCUtil.getConnection(dataSource);
+        Connection con = JDBCUtil.getConnection(getDataSourceWrite());
         PreparedStatement pstmt = null;
         try {
             pstmt = JDBCUtil.prepareStatmenent(con, sql);
@@ -177,6 +181,9 @@ public class ObjectUpdate extends MAGAAction {
         }
 
         dirtyIndexes(obj);
+        if (getMAGA().isWriteThroughCacheOnUpdate()) {
+            getCache().setObject(obj, getLoadTemplate());
+        }
         obj.savePristineIndexValues();
     }
 
@@ -193,7 +200,7 @@ public class ObjectUpdate extends MAGAAction {
         sql = sql.substring(0, sql.length() - 1);
         sql += " where id = ?";
 
-        Connection con = JDBCUtil.getConnection(dataSource);
+        Connection con = JDBCUtil.getConnection(getDataSourceWrite());
         try {
             PreparedStatement pstmt = JDBCUtil.prepareStatmenent(con, sql);
 

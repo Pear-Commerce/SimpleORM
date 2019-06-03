@@ -16,10 +16,15 @@ import com.ericdmartell.maga.utils.HistoryUtil;
 import com.ericdmartell.maga.utils.JDBCUtil;
 import com.ericdmartell.maga.utils.ReflectionUtils;
 
-public class AssociationAdd extends MAGAAction {
+public class AssociationAdd extends MAGAAwareContext {
 
+	@Deprecated
 	public AssociationAdd(DataSource dataSource, MAGACache cache, MAGA maga, MAGALoadTemplate template) {
-		super(dataSource, cache, maga, template);
+		super(maga);
+	}
+
+	public AssociationAdd(MAGA maga) {
+		super(maga);
 	}
 
 	public void add(MAGAObject obj, MAGAObject obj2, MAGAAssociation association) {
@@ -42,7 +47,7 @@ public class AssociationAdd extends MAGAAction {
 		String first = "1";
 		Connection connection = null;
 		try {
-			connection = JDBCUtil.getConnection(dataSource);
+			connection = JDBCUtil.getConnection(getDataSourceRead());
 			ResultSet rst = JDBCUtil.executeQuery(connection, "select * from " + table +" where `" + obj.getClass().getSimpleName() + "` = ? and `" + obj2.getClass().getSimpleName() + "` = ?", obj.id, obj2.id);
 			if (rst.next()) {
 				first = "0";
@@ -55,40 +60,40 @@ public class AssociationAdd extends MAGAAction {
 		
 		// DB Part
 		JDBCUtil.executeUpdate("insert into `" + table + "`(`" + obj.getClass().getSimpleName() + "`,`"
-				+ obj2.getClass().getSimpleName() + "`, dateAssociated, firstAssoc) values(?,?, now(), ?)", dataSource, obj.id, obj2.id, first);
+				+ obj2.getClass().getSimpleName() + "`, dateAssociated, firstAssoc) values(?,?, now(), ?)", getDataSourceWrite(), obj.id, obj2.id, first);
 
 		// Cache Part
-		cache.dirtyAssoc(obj, association);
-		cache.dirtyAssoc(obj2, association);
+		getCache().dirtyAssoc(obj, association);
+		getCache().dirtyAssoc(obj2, association);
 	}
 
 	private void oneToMany(MAGAObject objOfClass1, MAGAObject objOfClass2, MAGAAssociation association) {
 		
 		// We need this because if we're adding an assoc for a one-many, we might be switching the assoc of the old one.
 		MAGAObject oldOneOfTheOneToMany = null;
-		List<MAGAObject> listOfOldOneOfTheOneToMany = maga.loadAssociatedObjects(objOfClass2, association);
+		List<MAGAObject> listOfOldOneOfTheOneToMany = getMAGA().loadAssociatedObjects(objOfClass2, association);
 		if (!listOfOldOneOfTheOneToMany.isEmpty()) {
 			oldOneOfTheOneToMany = listOfOldOneOfTheOneToMany.get(0);
 		}
 		
 		
 		// For historical changes.
-		MAGAObject oldObject = maga.load(objOfClass2.getClass(), objOfClass2.id);
+		MAGAObject oldObject = getMAGA().load(objOfClass2.getClass(), objOfClass2.id);
 
 		// DB/Live object field swap Part.
 		JDBCUtil.executeUpdate("update `" + objOfClass2.getClass().getSimpleName() + "` set `" + association.class2Column()
-				+ "` = ? where id = ?", dataSource, objOfClass1.id, objOfClass2.id);
+				+ "` = ? where id = ?", getDataSourceWrite(), objOfClass1.id, objOfClass2.id);
 		ReflectionUtils.setFieldValue(objOfClass2, association.class2Column(), objOfClass1.id);
 
 		// Cache Part.
-		cache.dirtyObject(objOfClass2);
-		cache.dirtyAssoc(objOfClass2, association);
-		cache.dirtyAssoc(objOfClass1, association);
+		getCache().dirtyObject(objOfClass2);
+		getCache().dirtyAssoc(objOfClass2, association);
+		getCache().dirtyAssoc(objOfClass1, association);
 		if (oldOneOfTheOneToMany != null) {
-			cache.dirtyAssoc(oldOneOfTheOneToMany, association);
+			getCache().dirtyAssoc(oldOneOfTheOneToMany, association);
 		}
 
 		// Since we changed an actual object, we record the change.
-		HistoryUtil.recordHistory(oldObject, objOfClass2, maga, dataSource);
+		HistoryUtil.recordHistory(oldObject, objOfClass2, getMAGA(), getDataSourceWrite());
 	}
 }
