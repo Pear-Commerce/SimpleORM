@@ -87,7 +87,9 @@ public class TestAssoc extends MAGAAssociation {
 **Using MAGA in Application Code**
 
 ```java
-MAGA orm = new MAGA().withDataSource(dataSource).withCache(cache);
+MAGA orm = new MAGA()
+  .withDataSource(dataSource)
+  .withCache(cache);
 ```
 Where *dataSource* is a *javax.sql.DataSource* and cache is a *com.ericdmartell.cache.Cache*, an abstract class implemented with whatever technology you'd like.  We've provided a Memcached and Java HashMap implementation.
 
