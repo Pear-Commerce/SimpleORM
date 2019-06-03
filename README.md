@@ -120,7 +120,6 @@ When any dependent object or association is changed, the loadTemplate will reloa
 
 For every object MAGA manages, we create a table called (Object_name)_history, which shows every write to the object and what changed.  This is done off-thread, so you don't need to worry about the perf hit.
 
-
 # Minutiae
 
 MAGA is a lazily populated cache.  When you load Objects, we check the cache, then the database (which then populates the cache).  When you load associations, we check the cache for a list of ids of the remote class defined by the association.  If we miss, we load the ids out of database, and save them in cache.  We then load all objects for the ids using the object load path.
@@ -132,3 +131,25 @@ This cache is going to be more effective in a read-intensive than a write-intens
 # Who is MAGA?
 
 MAGA's authors are Eric Martell and Alex Wyler, who co-founded @EatStreet.  Alex wrote the first version of MAGA which is live on EatStreet.com currently, and Eric worked on porting it to open source and adding templates.
+
+# Getting MAGA
+
+An easy way to get MAGA if you use dependency manager like maven is to use Jitpack:
+
+```
+<repositories>
+	<repository>
+		<id>jitpack.io</id>
+		<url>https://jitpack.io</url>
+	</repository>
+</repositories>
+```
+
+```
+<dependency>
+	<groupId>com.github.Pear-Commerce</groupId>
+	<artifactId>MAGA</artifactId>
+	<version>2.6.0</version>
+</dependency>
+```
+
