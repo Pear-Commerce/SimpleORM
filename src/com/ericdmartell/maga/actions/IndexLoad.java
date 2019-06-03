@@ -34,7 +34,6 @@ public class IndexLoad extends MAGAAwareContext {
     }
 
     public <T extends MAGAObject> void dirty(Class<T> aClass, String columnName, Object value) {
-        System.out.println("Dirtying " + aClass + " " + columnName + "=" + value);
         final IndexCacheKey cacheKey = IndexCacheKey.getIndex(aClass, columnName, value);
         getCache().dirty(cacheKey.toString());
     }
