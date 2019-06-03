@@ -26,7 +26,7 @@ public class IndexLoad extends MAGAAwareContext {
 
         ids = (List<Long>) getCache().get(cacheKey.toString());
         if (ids == null) {
-            ids = new ObjectLoad(getMAGA()).loadIdsWhereExtra(clazz, String.format("`%s`=?", columnName), null, value);
+            ids = getMAGA().buildObjectLoad().loadIdsWhereExtra(clazz, String.format("`%s`=?", columnName), null, value);
             getCache().set(cacheKey.toString(), ids);
         }
 
