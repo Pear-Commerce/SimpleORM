@@ -153,3 +153,4 @@ An easy way to get MAGA if you use dependency manager like maven is to use Jitpa
 </dependency>
 ```
 
+More info here: https://jitpack.io/#Pear-Commerce/MAGA/2.6
