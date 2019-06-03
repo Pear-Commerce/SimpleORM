@@ -41,12 +41,12 @@ public class ObjectLoad extends MAGAAwareContext {
 		}
 	}
 
-	public List<MAGAObject> loadAll(Class clazz) {
+	public <T extends MAGAObject> List<T> loadAll(Class<T> clazz) {
 		return loadWhereExtra(clazz, "1", "");
 	}
 
-	public List<MAGAObject> loadWhereExtra(Class clazz, String where, String extra, Object... params) {
-		List<MAGAObject> ret = load(clazz, loadIdsWhereExtra(clazz, where, extra, params));
+	public <T extends MAGAObject> List<T> loadWhereExtra(Class<T> clazz, String where, String extra, Object... params) {
+		List<T> ret = load(clazz, loadIdsWhereExtra(clazz, where, extra, params));
 		return ret;
 	}
 
@@ -67,11 +67,11 @@ public class ObjectLoad extends MAGAAwareContext {
 		}
 	}
 
-	public MAGAObject load(Class clazz, long id) {
+	public <T extends MAGAObject> T load(Class<T> clazz, long id) {
 		//Just a wrapper on the load collection of ids.
 		List<Long> ids = new ArrayList<>();
 		ids.add(id);
-		List<MAGAObject> retList = load(clazz, ids);
+		List<T> retList = load(clazz, ids);
 		if (retList.isEmpty()) {
 			return null;
 		} else {
@@ -79,7 +79,7 @@ public class ObjectLoad extends MAGAAwareContext {
 		}
 	}
 
-	public List<MAGAObject> load(Class clazz, Collection<Long> ids) {
+	public <T extends MAGAObject> List<T> load(Class<T> clazz, Collection<Long> ids) {
 
 		// A running list of ids to load
 		List<Long> toLoad = new ArrayList<>(ids);
@@ -97,7 +97,7 @@ public class ObjectLoad extends MAGAAwareContext {
 		
 		
 		// Try getting them from memcached
-		List<MAGAObject> ret = getCache().getObjects(clazz, toLoad);
+		List<T> ret = getCache().getObjects(clazz, toLoad);
 
 		// Remove the ids we got from memcached before going to the database.
 		for (MAGAObject gotFromMemcached : ret) {
@@ -106,7 +106,7 @@ public class ObjectLoad extends MAGAAwareContext {
 
 		// We still have ids that aren't in memcached, fetch from the database.
 		if (!toLoad.isEmpty()) {
-			List<MAGAObject> dbObjects = loadFromDB(clazz, toLoad);
+			List<T> dbObjects = loadFromDB(clazz, toLoad);
 			for (MAGAObject gotFromDB : dbObjects) {
 				toLoad.remove(gotFromDB.id);
 			}
@@ -135,8 +135,8 @@ public class ObjectLoad extends MAGAAwareContext {
 		return ret;
 	}
 
-	private List<MAGAObject> loadFromDB(Class<MAGAObject> clazz, Collection<Long> ids) {
-		List<MAGAObject> ret = new ArrayList<>();
+	private <T extends MAGAObject> List<T> loadFromDB(Class<T> clazz, Collection<Long> ids) {
+		List<T> ret = new ArrayList<>();
 
 		// Fields with annotations
 		List<String> fieldNames = new ArrayList<>(ReflectionUtils.getFieldNames(clazz));
@@ -148,7 +148,7 @@ public class ObjectLoad extends MAGAAwareContext {
 		try {
 			ResultSet rst = JDBCUtil.executeQuery(connection, sql, ids);
 			while (rst.next()) {
-				MAGAObject entity =  ReflectionUtils.getEntityFromResultSet(clazz, rst);
+				T entity =  ReflectionUtils.getEntityFromResultSet(clazz, rst);
 				ret.add(entity);
 			}
 		} catch (Exception e) {
@@ -160,7 +160,7 @@ public class ObjectLoad extends MAGAAwareContext {
 
 	}
 
-	private String getSQL(Class<MAGAObject> clazz, Collection<String> fieldNames, Collection<Long> ids) {
+	private <T extends MAGAObject> String getSQL(Class<T> clazz, Collection<String> fieldNames, Collection<Long> ids) {
 		String sql = "select ";
 		for (String fieldName : fieldNames) {
 			sql += "`" + fieldName + "`,";

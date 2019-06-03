@@ -171,15 +171,15 @@ public class MAGA {
 	}
 
 	public <T extends MAGAObject> List<T> load(Class<T> clazz, Collection<Long> ids) {
-		return (List<T>) buildObjectLoad().load(clazz, ids);
+		return buildObjectLoad().load(clazz, ids);
 	}
 
 	public <T extends MAGAObject> List<T> loadAll(Class<T> clazz) {
-		return (List<T>) buildObjectLoad().loadAll(clazz);
+		return buildObjectLoad().loadAll(clazz);
 	}
 
 	public <T extends MAGAObject> List<T> loadWhereExtra(Class<T> clazz, String where, String extra, Object... params) {
-		return (List<T>) buildObjectLoad().loadWhereExtra(clazz, where, extra, params);
+		return buildObjectLoad().loadWhereExtra(clazz, where, extra, params);
 	}
 
 	public <T extends MAGAObject> List<T> loadByIndex(Class<T> clazz, String columnName, Object value) {

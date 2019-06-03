@@ -20,7 +20,7 @@ public class MAGACache extends Cache {
 	private Cache delegate;
 	
 	// key is just Classname:ID
-	public List<String> getKeys(Class<MAGAObject> clazz, Collection<Long> ids) {
+	public <T extends MAGAObject> List<String> getKeys(Class<T> clazz, Collection<Long> ids) {
 		List<String> ret = new ArrayList<>();
 		for (long id : ids) {
 			ret.add(getKey(clazz, id));
@@ -32,11 +32,11 @@ public class MAGACache extends Cache {
 		return getKey((Class<MAGAObject>) simpleORMObject.getClass(), simpleORMObject.id);
 	}
 
-	public final String getKey(Class<MAGAObject> clazz, long id) {
+	public final <T extends MAGAObject> String getKey(Class<T> clazz, long id) {
 		return clazz.getName() + ":" + id;
 	}
 
-	public final void setObjects(List<MAGAObject> simpleORMObjects, 
+	public final <T extends MAGAObject> void setObjects(List<T> simpleORMObjects,
 			MAGALoadTemplate dependentTemplate) {
 		for (MAGAObject toSet : simpleORMObjects) {
 			setObject(toSet, dependentTemplate);
@@ -65,7 +65,7 @@ public class MAGACache extends Cache {
 		}
 	}
 
-	public final List<MAGAObject> getObjects(Class<MAGAObject> clazz, Collection<Long> ids) {
+	public final <T extends MAGAObject> List<T> getObjects(Class<T> clazz, Collection<Long> ids) {
 
 		Map<String, Object> ret = getBulk(getKeys(clazz, ids));
 
