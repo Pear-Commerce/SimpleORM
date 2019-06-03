@@ -12,17 +12,14 @@ import java.sql.Connection;
 /**
  * Created by alexwyler on 8/11/18.
  */
-public class MigrationTest {
+public class MigrationTest extends BaseMAGATest {
 
     static Connection conn;
-    static DataSource ds;
-    static MAGA maga;
 
     @BeforeClass
     public static void setup() {
-        ds = MAGATest.createDataSource();
-        conn = JDBCUtil.getConnection(ds);
-        maga = new MAGA(ds);
+        MAGA maga = getMAGA();
+        conn = JDBCUtil.getConnection(maga.dataSourceWrite);
         JDBCUtil.executeUpdate(conn, "DROP TABLE IF EXISTS Migration_Test_Table");
         JDBCUtil.executeUpdate(conn, "DROP TABLE IF EXISTS Data_Migration_Record");
         maga.schemaSync();
@@ -50,7 +47,7 @@ public class MigrationTest {
 
     @Test
     public void testMigration() {
-        new DataMigrate(maga, "com.ericdmartell.maga").go();
+        new DataMigrate(getMAGA(), "com.ericdmartell.maga").go();
         JDBCUtil.executeQuery(conn, "SELECT * FROM `Migration_Test_Table`");
     }
 }

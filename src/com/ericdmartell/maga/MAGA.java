@@ -69,6 +69,9 @@ public class MAGA {
 				.withObjectMapper(objectMapper);
 	}
 
+	public MAGA() {
+	}
+
 	/**
 	 * Warning: for backwards compat, this constructor defaults to a HashMapCache
 	 */

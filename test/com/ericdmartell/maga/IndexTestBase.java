@@ -1,16 +1,14 @@
 package com.ericdmartell.maga;
 
-import com.ericdmartell.maga.actions.ObjectLoad;
 import com.ericdmartell.maga.annotations.MAGAORMField;
 import com.ericdmartell.maga.objects.MAGAObject;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.List;
 
-public class IndexTest extends MAGATest {
+public class IndexTestBase extends BaseMAGATest {
 
     public static class IndexTestObject extends MAGAObject<IndexTestObject> {
 
@@ -107,7 +105,6 @@ public class IndexTest extends MAGATest {
         IndexTestObject femaleVersion = new IndexTestObject();
         femaleVersion.name = object.name;
         femaleVersion.gender = "female";
-        System.out.println("SAVING NEW FEMALE " + femaleVersion.name);
         orm.buildObjectUpdate().addSQL(femaleVersion);
         // Sanity check changes during creation of new object
         Assert.assertEquals(hits = hits + 0, orm.cache.hits + orm.cache.bulkHits);
