@@ -137,6 +137,7 @@ MAGA's authors are Eric Martell and Alex Wyler, who co-founded @EatStreet.  Alex
 # Getting MAGA
 
 An easy way to get MAGA if you use dependency manager like maven is to use Jitpack:
+[![](https://jitpack.io/v/Pear-Commerce/MAGA.svg)](https://jitpack.io/#Pear-Commerce/MAGA)
 
 ```
 <repositories>
