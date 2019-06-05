@@ -8,6 +8,8 @@ import java.util.*;
 
 import javax.sql.DataSource;
 
+import com.ericdmartell.cache.Cache;
+import com.ericdmartell.maga.MAGA;
 import org.reflections.Reflections;
 
 import com.ericdmartell.maga.annotations.MAGANoHistory;
@@ -25,17 +27,15 @@ import org.reflections.scanners.Scanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
-public class SchemaSync {
-	private DataSource dataSource;
-	private MAGACache cache;
+public class SchemaSync extends MAGAAwareContext {
 
-	public SchemaSync(DataSource dataSource, MAGACache cache) {
-		this.dataSource = dataSource;
-		this.cache = cache;
+	public SchemaSync(MAGA maga) {
+		super(maga);
 	}
 
 	public void go() {
 		boolean changes = false;
+		DataSource dataSource = getDataSourceWrite();
 		String schema = JDBCUtil.executeQueryAndReturnSingleString(dataSource, "select database()");
 		Connection connection = JDBCUtil.getConnection(dataSource);
 		try {
@@ -57,9 +57,16 @@ public class SchemaSync {
 						tableName, schema) == 1;
 				if (!tableExists) {
 					changes = true;
-					String sql = "create table `" + tableName + "`(id bigint not null AUTO_INCREMENT, primary key(id))";
+					String sql = "create table `" + tableName + "`(id bigint not null AUTO_INCREMENT, primary key(id)) ENGINE=InnoDB";
+					String defaultCharset = getMAGA().getDefaultCharacterSet();
+					String defaultCollate = getMAGA().getDefaultCollate();
+					if (defaultCharset != null) {
+						sql += " DEFAULT CHARSET=utf8mb4";
+						if (defaultCollate != null) {
+							sql += " COLLATE utf8mb4_unicode_ci";
+						}
+					}
 					JDBCUtil.executeUpdate(sql, dataSource);
-
 					System.out.println("Creating table " + tableName + ". (" + sql + ")");
 				}
 
@@ -270,7 +277,10 @@ public class SchemaSync {
 			JDBCUtil.closeConnection(connection);
 		}
 		if (changes) {
-			cache.flush();
+			Cache cache = getCache();
+			if (cache != null) {
+				cache.flush();
+			}
 		}
 	}
 }

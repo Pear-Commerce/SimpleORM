@@ -4,7 +4,7 @@ import com.ericdmartell.maga.annotations.MAGAORMField;
 import com.ericdmartell.maga.objects.MAGAObject;
 
 public class Obj1 extends MAGAObject {
-	@MAGAORMField
+	@MAGAORMField(isIndex = true)
 	public String field1;
 	
 	@Override

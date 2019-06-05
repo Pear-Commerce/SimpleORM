@@ -62,7 +62,7 @@ public class MemcachedCache extends Cache {
 				Collectors.toMap(sanitizedEntry -> sanitizedKeys.get(sanitizedEntry.getKey()), Map.Entry::getValue));
 	}
 
-	protected static String sanitizeKey(String key) {
+	public static String sanitizeKey(String key) {
 		return StringUtils.abbreviate(key.replaceAll("[\\s\\n\\r\0]", "_"), 250);
 	}
 }

@@ -1,5 +1,6 @@
 package com.ericdmartell.maga.actions;
 
+import com.ericdmartell.cache.Cache;
 import com.ericdmartell.maga.MAGA;
 import com.ericdmartell.maga.cache.MAGACache;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;
@@ -21,13 +22,19 @@ public class IndexLoad extends MAGAAwareContext {
     }
 
     public <T extends MAGAObject> List<Long> load(Class<T> clazz, String columnName, Object value) {
-        List<Long>          ids;
-        final IndexCacheKey cacheKey = IndexCacheKey.getIndex(clazz, columnName, value);
+        List<Long>          ids = null;
 
-        ids = (List<Long>) getCache().get(cacheKey.toString());
+        Cache cache = getCache();
+        final IndexCacheKey cacheKey = IndexCacheKey.getIndex(clazz, columnName, value);
+        if (cache != null) {
+            ids = (List<Long>) cache.get(cacheKey.toString());
+        }
         if (ids == null) {
             ids = getMAGA().buildObjectLoad().loadIdsWhereExtra(clazz, String.format("`%s`=?", columnName), null, value);
-            getCache().set(cacheKey.toString(), ids);
+
+            if (cache != null) {
+                cache.set(cacheKey.toString(), ids);
+            }
         }
 
         return ids;
@@ -35,7 +42,10 @@ public class IndexLoad extends MAGAAwareContext {
 
     public <T extends MAGAObject> void dirty(Class<T> aClass, String columnName, Object value) {
         final IndexCacheKey cacheKey = IndexCacheKey.getIndex(aClass, columnName, value);
-        getCache().dirty(cacheKey.toString());
+        Cache cache = getCache();
+        if (cache != null) {
+            cache.dirty(cacheKey.toString());
+        }
     }
 
 }

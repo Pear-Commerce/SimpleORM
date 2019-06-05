@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import com.ericdmartell.cache.Cache;
 import com.ericdmartell.maga.MAGA;
 import com.ericdmartell.maga.annotations.MAGATimestampID;
 import com.ericdmartell.maga.associations.MAGAAssociation;
@@ -37,10 +38,13 @@ public class ObjectUpdate extends MAGAAwareContext {
         // Object for history
         MAGAObject            oldObj               = null;
         List<MAGAAssociation> affectedAssociations = getMAGA().loadWhereHasClassWithJoinColumn(obj.getClass());
+        MAGACache cache = getCache();
         if (obj.id == 0) {
             // We're adding an object without an assigned id
             addSQL(obj);
-            getCache().dirtyObject(obj);
+            if (cache != null) {
+                cache.dirtyObject(obj);
+            }
         } else {
             // TODO(alex): we can replace this with keeping a set of pristine join fields
             oldObj = getMAGA().load(obj.getClass(), obj.id);
@@ -53,9 +57,11 @@ public class ObjectUpdate extends MAGAAwareContext {
             dirtyIndexes(obj);
             // Update the db after we've done our dirtying.
             updateSQL(obj);
-            getCache().dirtyObject(obj);
-            if (getMAGA().isWriteThroughCacheOnUpdate()) {
-                getCache().setObject(obj, getLoadTemplate());
+            if (cache != null) {
+                cache.dirtyObject(obj);
+                if (getMAGA().isWriteThroughCacheOnUpdate()) {
+                    cache.setObject(obj, getLoadTemplate());
+                }
             }
             obj.savePristineIndexValues();
         }
@@ -181,8 +187,9 @@ public class ObjectUpdate extends MAGAAwareContext {
         }
 
         dirtyIndexes(obj);
-        if (getMAGA().isWriteThroughCacheOnUpdate()) {
-            getCache().setObject(obj, getLoadTemplate());
+        MAGACache cache = getCache();
+        if (getMAGA().isWriteThroughCacheOnUpdate() && cache != null) {
+            cache.setObject(obj, getLoadTemplate());
         }
         obj.savePristineIndexValues();
     }

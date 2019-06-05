@@ -29,7 +29,10 @@ public class ObjectDelete extends MAGAAwareContext {
 			getMAGA().deleteAssociations(obj, (MAGAAssociation) assoc);
 		}
 		JDBCUtil.executeUpdate("delete from `" + obj.getClass().getSimpleName() + "` where id = ?", getDataSourceWrite(), obj.id);
-		getCache().dirtyObject(obj);
+		MAGACache cache = getCache();
+		if (cache != null) {
+			cache.dirtyObject(obj);
+		}
 	}
 	
 	

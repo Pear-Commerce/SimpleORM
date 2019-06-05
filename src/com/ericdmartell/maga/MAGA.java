@@ -34,6 +34,8 @@ public class MAGA {
 	public MAGACache        cache;
 	public MAGALoadTemplate loadTemplate;
 	public ObjectMapper		objectMapper;
+	private String			defaultCharacterSet;
+	private String			defaultCollate;
 
 	private boolean writeThroughCacheOnUpdate = true;
 
@@ -163,6 +165,24 @@ public class MAGA {
 		return this;
 	}
 
+	public MAGA withDefaultCharacterSet(String defaultCharacterSet) {
+		this.defaultCharacterSet = defaultCharacterSet;
+		return this;
+	}
+
+	public MAGA withDefaultCollate(String defaultCollate) {
+		this.defaultCollate = defaultCollate;
+		return this;
+	}
+
+	public String getDefaultCharacterSet() {
+		return defaultCharacterSet;
+	}
+
+	public String getDefaultCollate() {
+		return defaultCollate;
+	}
+
 	public boolean isWriteThroughCacheOnUpdate() {
 		return writeThroughCacheOnUpdate;
 	}
@@ -238,7 +258,7 @@ public class MAGA {
 	}
 
 	public void schemaSync() {
-		new SchemaSync(dataSourceWrite, cache).go();
+		new SchemaSync(this).go();
 	}
 
 	private void throwExceptionIfCantSave(MAGAObject object) {

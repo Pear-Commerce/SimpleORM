@@ -145,8 +145,8 @@ public class BasicTest extends BaseMAGATest {
 
 		Assert.assertTrue(orm.loadAssociatedObjects(obj1, assoc).size() == 1);
 		Assert.assertTrue(orm.loadAssociatedObjects(obj2, assoc).isEmpty());
-
 	}
+
 	@Test
 	public void deleteManyToManyJoinsLeavingNoAssocs() {
 		MAGA orm = getMAGA();
@@ -290,6 +290,23 @@ public class BasicTest extends BaseMAGATest {
 		obj8.id = testId;
 		orm.buildObjectUpdate().addSQL(obj8);
 		Assert.assertNotNull(orm.load(IdGenEnt.class, testId));
+	}
+
+	@Test
+	public void testNoCache() {
+		MAGA noCacheOrm = new MAGA().withDataSource(getDataSource());
+		noCacheOrm.schemaSync();
+		Obj1 obj1 = new Obj1();
+		obj1.field1 = "This is a test of field one";
+		noCacheOrm.save(obj1);
+
+		Obj1 obj1b = noCacheOrm.load(Obj1.class, obj1.id);
+		Assert.assertNotNull(obj1b);
+
+		Obj1 obj1c = noCacheOrm.loadByIndexSingle(Obj1.class, "field1", "This is a test of field one");
+		Assert.assertNotNull(obj1c);
+
+		noCacheOrm.delete(obj1);
 	}
 
 }

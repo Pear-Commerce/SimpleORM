@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import com.ericdmartell.cache.Cache;
 import com.ericdmartell.maga.MAGA;
 import com.ericdmartell.maga.cache.MAGACache;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;
@@ -95,9 +96,14 @@ public class ObjectLoad extends MAGAAwareContext {
 			return new ArrayList<>();
 		}
 		
-		
 		// Try getting them from memcached
-		List<T> ret = getCache().getObjects(clazz, toLoad);
+		List<T> ret;
+		MAGACache cache = getCache();
+		if (cache != null) {
+			ret = getCache().getObjects(clazz, toLoad);
+		} else {
+			ret = new ArrayList<>();
+		}
 
 		// Remove the ids we got from memcached before going to the database.
 		for (MAGAObject gotFromMemcached : ret) {
@@ -110,9 +116,11 @@ public class ObjectLoad extends MAGAAwareContext {
 			for (MAGAObject gotFromDB : dbObjects) {
 				toLoad.remove(gotFromDB.id);
 			}
-			
-			//We'll have them in the cache next time.
-			getCache().setObjects(dbObjects, getLoadTemplate());
+
+			if (cache != null) {
+				//We'll have them in the cache next time.
+				cache.setObjects(dbObjects, getLoadTemplate());
+			}
 
 			ret.addAll(dbObjects);
 		}
@@ -127,9 +135,9 @@ public class ObjectLoad extends MAGAAwareContext {
 			// System.out.println("DB Misses for " + toLoad);
 		}
 		
-		if (getLoadTemplate() != null) {
+		if (getLoadTemplate() != null && cache != null) {
 			for (MAGAObject object : ret) {
-				getCache().addTemplateDependency(object, getLoadTemplate());
+				cache.addTemplateDependency(object, getLoadTemplate());
 			}
 		}
 		return ret;
