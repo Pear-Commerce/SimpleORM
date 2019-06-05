@@ -8,7 +8,7 @@ import java.util.*;
 
 import javax.sql.DataSource;
 
-import com.ericdmartell.cache.Cache;
+import com.ericdmartell.maga.cache.Cache;
 import com.ericdmartell.maga.MAGA;
 import org.reflections.Reflections;
 
@@ -16,7 +16,6 @@ import com.ericdmartell.maga.annotations.MAGANoHistory;
 import com.ericdmartell.maga.annotations.MAGAORMField;
 import com.ericdmartell.maga.annotations.MAGATimestampID;
 import com.ericdmartell.maga.associations.MAGAAssociation;
-import com.ericdmartell.maga.cache.MAGACache;
 import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.JDBCUtil;
 import com.ericdmartell.maga.utils.MAGAException;

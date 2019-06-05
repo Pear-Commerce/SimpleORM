@@ -8,13 +8,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.ericdmartell.cache.Cache;
-
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.OperationFuture;
 import org.apache.commons.lang3.StringUtils;
 
-public class MemcachedCache extends Cache {
+public class MemcachedCache extends MAGACache {
 	
 	private MemcachedClient memcachedClient;
 

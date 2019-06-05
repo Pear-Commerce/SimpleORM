@@ -1,6 +1,6 @@
 package com.ericdmartell.maga.actions;
 
-import com.ericdmartell.cache.Cache;
+import com.ericdmartell.maga.cache.Cache;
 import com.ericdmartell.maga.MAGA;
 import com.ericdmartell.maga.cache.MAGACache;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;

@@ -1,4 +1,4 @@
-package com.ericdmartell.cache;
+package com.ericdmartell.maga.cache;
 
 public class CacheData {
 	public long hits;

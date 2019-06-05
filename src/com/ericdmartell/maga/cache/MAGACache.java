@@ -5,19 +5,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.ericdmartell.cache.Cache;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;
 import com.ericdmartell.maga.objects.MAGAObject;
 
 import gnu.trove.map.hash.THashMap;
 
-public class MAGACache extends Cache {
-	
-	private MAGACache() {
-		
-	}
-	private Cache delegate;
+public abstract class MAGACache extends Cache {
 	
 	// key is just Classname:ID
 	public <T extends MAGAObject> List<String> getKeys(Class<T> clazz, Collection<Long> ids) {
@@ -152,39 +146,4 @@ public class MAGACache extends Cache {
 		return assocToObjects.get(association);
 
 	}
-	
-	@Override
-	public void setImpl(String key, Object val) {
-		delegate.set(key, val);
-	}
-	
-	@Override
-	public Map<String, Object> getBulkImpl(List<String> keys) {
-		return delegate.getBulk(keys);
-	}
-	
-	@Override
-	public Object getImpl(String key) {
-		return delegate.get(key);
-	}
-	
-	@Override
-	public void flushImpl() {
-		delegate.flush();
-		
-	}
-	
-	@Override
-	public void dirtyImpl(String key) {
-		delegate.dirty(key);
-		
-	}
-	
-	public static MAGACache getInstance(Cache cache) {
-		MAGACache ret = new MAGACache();
-		ret.delegate = cache;
-		return ret;
-	}
-
-	
 }

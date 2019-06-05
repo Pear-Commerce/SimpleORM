@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
-import com.ericdmartell.cache.Cache;
+import com.ericdmartell.maga.cache.Cache;
 import com.ericdmartell.maga.actions.*;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.cache.HashMapCache;
@@ -66,7 +66,7 @@ public class MAGA {
 		});
 	}
 
-	public MAGA(DataSource dataSourceReadWrite, Cache cache, ObjectMapper objectMapper) {
+	public MAGA(DataSource dataSourceReadWrite, MAGACache cache, ObjectMapper objectMapper) {
 		this.withDataSource(dataSourceReadWrite)
 				.withCache(cache)
 				.withObjectMapper(objectMapper);
@@ -83,25 +83,25 @@ public class MAGA {
 				.withHashMapCache();
 	}
 
-	public MAGA(DataSource dataSourceReadWrite, Cache cache) {
+	public MAGA(DataSource dataSourceReadWrite, MAGACache cache) {
 		this.withDataSource(dataSourceReadWrite)
 				.withCache(cache);
 	}
 
-	public MAGA(DataSource dataSourceReadWrite, Cache cache, MAGALoadTemplate loadTemplate) {
+	public MAGA(DataSource dataSourceReadWrite, MAGACache cache, MAGALoadTemplate loadTemplate) {
 		this.withDataSource(dataSourceReadWrite)
 				.withCache(cache)
 				.withLoadTemplate(loadTemplate);
 	}
 
-	public MAGA(DataSource dataSourceReadWrite, Cache cache, MAGALoadTemplate loadTemplate, IDGen idGen) {
+	public MAGA(DataSource dataSourceReadWrite, MAGACache cache, MAGALoadTemplate loadTemplate, IDGen idGen) {
 		this.withDataSource(dataSourceReadWrite)
 				.withCache(cache)
 				.withLoadTemplate(loadTemplate)
 				.withIDGen(idGen);
 	}
 
-	public MAGA(DataSource dataSourceReadWrite, Cache cache, ObjectMapper objectMapper, MAGALoadTemplate loadTemplate, IDGen idGen) {
+	public MAGA(DataSource dataSourceReadWrite, MAGACache cache, ObjectMapper objectMapper, MAGALoadTemplate loadTemplate, IDGen idGen) {
 		this.withDataSource(dataSourceReadWrite)
 				.withCache(cache)
 				.withObjectMapper(objectMapper)
@@ -120,11 +120,6 @@ public class MAGA {
 
 	public MAGA withLoadTemplate(MAGALoadTemplate loadTemplate) {
 		this.loadTemplate = loadTemplate;
-		return this;
-	}
-
-	public MAGA withCache(Cache cache) {
-		this.cache = MAGACache.getInstance(cache);
 		return this;
 	}
 

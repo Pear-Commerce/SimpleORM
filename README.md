@@ -91,7 +91,7 @@ MAGA orm = new MAGA()
   .withDataSource(dataSource)
   .withCache(cache);
 ```
-Where *dataSource* is a *javax.sql.DataSource* and cache is a *com.ericdmartell.cache.Cache*, an abstract class implemented with whatever technology you'd like.  We've provided a Memcached and Java HashMap implementation.
+Where *dataSource* is a *javax.sql.DataSource* and cache is a *com.ericdmartell.maga.cache.Cache*, an abstract class implemented with whatever technology you'd like.  We've provided a Memcached and Java HashMap implementation.
 
 MAGA has the following methods:
 * **load(Class clazz, long id)**: Returns object of Class with id.

@@ -3,14 +3,12 @@ package com.ericdmartell.maga.cache;
 import java.lang.reflect.Field;
 import java.util.*;
 
-import com.ericdmartell.cache.Cache;
-import com.ericdmartell.cache.CacheData;
 import org.apache.commons.collections4.map.LRUMap;
 
 import java.util.HashMap;
 
 
-public class HashMapCache extends Cache {
+public class HashMapCache extends MAGACache {
 
 	Map<String, Object> data;
 	public CacheData cacheData = new CacheData();
