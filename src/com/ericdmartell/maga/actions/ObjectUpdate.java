@@ -19,6 +19,7 @@ import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.*;
 
 import gnu.trove.map.hash.THashMap;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class ObjectUpdate extends MAGAAwareContext {
 
@@ -53,7 +54,7 @@ public class ObjectUpdate extends MAGAAwareContext {
             for (MAGAAssociation assoc : affectedAssociations) {
                 biDirectionalDirty(obj, assoc);
             }
-            dirtyIndexes(obj);
+            dirtyIndexes(obj, false);
             // Update the db after we've done our dirtying.
             updateSQL(obj);
             if (cache != null) {
@@ -90,17 +91,31 @@ public class ObjectUpdate extends MAGAAwareContext {
     /**
      * Dirty the previous index values and the current index values for an object.
      */
-    private void dirtyIndexes(MAGAObject obj) {
+    private void dirtyIndexes(MAGAObject obj, boolean forceIfUnchanged) {
         IndexLoad                      indexAction           = new IndexLoad(getMAGA());
         Map<String, Object> pristineIndexValues = obj.getPristineIndexValues();
         for (String indexName : ReflectionUtils.getIndexedColumns(obj.getClass())) {
             Object currentValue = ReflectionUtils.getFieldValue(obj, indexName);
-            indexAction.dirty(obj.getClass(), indexName, currentValue);
 
-            // minor optimization for newly-created objects (to avoid unnecessary dirtying of 'null' values)
-            if (pristineIndexValues.containsKey(indexName)) {
+            if (!pristineIndexValues.containsKey(indexName)) {
+                // if there is no previous value (the object is new), just dirty the new value, skipping nulls
+                if (currentValue != null) {
+                    indexAction.dirty(obj.getClass(), indexName, currentValue);
+                }
+            } else {
                 Object pristineValue = pristineIndexValues.get(indexName);
-                indexAction.dirty(obj.getClass(), indexName, pristineValue);
+                if (!ObjectUtils.equals(currentValue, pristineValue)) {
+                    // if the field changed, dirty both the old and the new
+                    indexAction.dirty(obj.getClass(), indexName, pristineValue);
+                    indexAction.dirty(obj.getClass(), indexName, currentValue);
+                } else if (forceIfUnchanged) {
+                    // if the field did not change, but force is set, dirty both the new value, skipping nulls
+                    if (currentValue != null) {
+                        indexAction.dirty(obj.getClass(), indexName, currentValue);
+                    }
+                } /* else {
+                    // if the field did not change, don't dirty anything
+                } */
             }
         }
 
@@ -185,7 +200,7 @@ public class ObjectUpdate extends MAGAAwareContext {
             JDBCUtil.closeConnection(con);
         }
 
-        dirtyIndexes(obj);
+        dirtyIndexes(obj, false);
         MAGACache cache = getCache();
         if (getMAGA().isWriteThroughCacheOnUpdate() && cache != null) {
             cache.setObject(obj, getLoadTemplate());
