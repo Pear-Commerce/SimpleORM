@@ -9,7 +9,6 @@ public interface CacheEventListener {
     public void onSingleHit();
     public void onSingleMiss();
     public void onSingleSet();
-    public void onSingleTrip();
 
     public void onBulkHit(int cnt);
     public void onBulkMiss(int cnt);

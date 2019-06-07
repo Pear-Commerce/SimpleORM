@@ -22,17 +22,14 @@ public abstract class Cache {
 	}
 
 	private void onSingleMiss() {
-		eventListeners.stream().forEach(CacheEventListener::onSingleTrip);
 		eventListeners.stream().forEach(CacheEventListener::onSingleMiss);
 	}
 
 	private void onSingleHit() {
-		eventListeners.stream().forEach(CacheEventListener::onSingleTrip);
 		eventListeners.stream().forEach(CacheEventListener::onSingleHit);
 	}
 
 	private void onSingleSet() {
-		eventListeners.stream().forEach(CacheEventListener::onSingleTrip);
 		eventListeners.stream().forEach(CacheEventListener::onSingleSet);
 	}
 

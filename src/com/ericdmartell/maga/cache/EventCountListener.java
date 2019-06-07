@@ -5,7 +5,6 @@ public class EventCountListener implements CacheEventListener {
     public long singleHits   = 0;
     public long singleMisses = 0;
     public long singleSets   = 0;
-    public long singleTrips  = 0;
 
     public long bulkHits   = 0;
     public long bulkMisses = 0;
@@ -28,11 +27,6 @@ public class EventCountListener implements CacheEventListener {
     @Override
     public void onSingleSet() {
         singleSets++;
-    }
-
-    @Override
-    public void onSingleTrip() {
-        singleTrips++;
     }
 
     @Override
@@ -69,7 +63,6 @@ public class EventCountListener implements CacheEventListener {
         singleHits = 0;
         singleMisses = 0;
         singleSets = 0;
-        singleTrips = 0;
 
         bulkHits = 0;
         bulkMisses = 0;
@@ -93,6 +86,6 @@ public class EventCountListener implements CacheEventListener {
     }
 
     public long roundTrips() {
-        return singleTrips + bulkTrips + dirties + flushes;
+        return singleHits + singleSets + singleMisses + bulkTrips + dirties + flushes;
     }
 }
