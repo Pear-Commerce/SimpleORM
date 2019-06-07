@@ -34,18 +34,15 @@ public abstract class Cache {
 	}
 
 	private void onBulkMiss(int cnt) {
-		eventListeners.stream().forEach(CacheEventListener::onBulkTrip);
 		eventListeners.stream().forEach(cel -> cel.onBulkMiss(cnt));
 	}
 
 	private void onBulkHit(int cnt) {
-		eventListeners.stream().forEach(CacheEventListener::onBulkTrip);
 		eventListeners.stream().forEach(cel -> cel.onBulkHit(cnt));
 	}
 
-	private void onBulkSet(int cnt) {
+	private void onBulkTrip() {
 		eventListeners.stream().forEach(CacheEventListener::onBulkTrip);
-		eventListeners.stream().forEach(cel -> cel.onBulkSet(cnt));
 	}
 
 	private void onDirty() {
@@ -81,6 +78,7 @@ public abstract class Cache {
 		Map<String, Object> ret = getBulkImpl(keys);
 		onBulkHit(ret.size());
 		onBulkMiss(keys.size() - ret.size());
+		onBulkTrip();
 		return ret;
 	}
 	public void resetStats() {
