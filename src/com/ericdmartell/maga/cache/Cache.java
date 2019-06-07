@@ -1,5 +1,7 @@
 package com.ericdmartell.maga.cache;
 
+import org.apache.commons.collections4.CollectionUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,32 +23,32 @@ public abstract class Cache {
 		return this;
 	}
 
-	private void onSingleMiss() {
-		eventListeners.stream().forEach(CacheEventListener::onSingleMiss);
+	private void onSingleMiss(String key) {
+		eventListeners.stream().forEach(cel -> cel.onSingleMiss(key));
 	}
 
-	private void onSingleHit() {
-		eventListeners.stream().forEach(CacheEventListener::onSingleHit);
+	private void onSingleHit(String key) {
+		eventListeners.stream().forEach(cel -> cel.onSingleHit(key));
 	}
 
-	private void onSingleSet() {
-		eventListeners.stream().forEach(CacheEventListener::onSingleSet);
+	private void onSingleSet(String key) {
+		eventListeners.stream().forEach(cel -> cel.onSingleSet(key));
 	}
 
-	private void onBulkMiss(int cnt) {
-		eventListeners.stream().forEach(cel -> cel.onBulkMiss(cnt));
+	private void onBulkMiss(List<String> keys) {
+		eventListeners.stream().forEach(cel -> cel.onBulkMiss(keys));
 	}
 
-	private void onBulkHit(int cnt) {
-		eventListeners.stream().forEach(cel -> cel.onBulkHit(cnt));
+	private void onBulkHit(List<String> keys) {
+		eventListeners.stream().forEach(cel -> cel.onBulkHit(keys));
 	}
 
 	private void onBulkTrip() {
 		eventListeners.stream().forEach(CacheEventListener::onBulkTrip);
 	}
 
-	private void onDirty() {
-		eventListeners.stream().forEach(CacheEventListener::onDirty);
+	private void onDirty(String key) {
+		eventListeners.stream().forEach(cel -> cel.onDirty(key));
 	}
 
 	private void onFlush() {
@@ -56,14 +58,14 @@ public abstract class Cache {
 	public Object get(String key) {
 		Object ret = getImpl(key);
 		if (ret != null) {
-			onSingleHit();
+			onSingleHit(key);
 		} else {
-			onSingleMiss();
+			onSingleMiss(key);
 		}
 		return ret;
 	}
 	public void set(String key, Object val) {
-		onSingleSet();
+		onSingleSet(key);
 		setImpl(key, val);
 	}
 	public void flush() {
@@ -71,13 +73,13 @@ public abstract class Cache {
 		flushImpl();
 	}
 	public void dirty(String key) {
-		onDirty();
+		onDirty(key);
 		dirtyImpl(key);
 	}
 	public Map<String, Object> getBulk(List<String> keys) {
 		Map<String, Object> ret = getBulkImpl(keys);
-		onBulkHit(ret.size());
-		onBulkMiss(keys.size() - ret.size());
+		onBulkHit(new ArrayList<>(ret.keySet()));
+		onBulkMiss(new ArrayList<>(CollectionUtils.subtract(keys, ret.keySet())));
 		onBulkTrip();
 		return ret;
 	}

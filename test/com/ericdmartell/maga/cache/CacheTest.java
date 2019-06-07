@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ser.Serializers;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CacheTest extends BaseMAGATest {
@@ -34,32 +35,32 @@ public class CacheTest extends BaseMAGATest {
         HashMapCache instrumentedCache = new HashMapCache(1000);
         instrumentedCache.withEventListener(new CacheEventListener() {
             @Override
-            public void onSingleHit() {
+            public void onSingleHit(String key) {
 
             }
 
             @Override
-            public void onSingleMiss() {
+            public void onSingleMiss(String key) {
 
             }
 
             @Override
-            public void onSingleSet() {
+            public void onSingleSet(String key) {
                 countEvents.incrementAndGet();
             }
 
             @Override
-            public void onBulkHit(int cnt) {
+            public void onBulkHit(List<String> keys) {
 
             }
 
             @Override
-            public void onBulkMiss(int cnt) {
+            public void onBulkMiss(List<String> keys) {
 
             }
 
             @Override
-            public void onBulkSet(int cnt) {
+            public void onBulkSet(List<String> keys) {
 
             }
 
@@ -69,7 +70,7 @@ public class CacheTest extends BaseMAGATest {
             }
 
             @Override
-            public void onDirty() {
+            public void onDirty(String key) {
 
             }
 

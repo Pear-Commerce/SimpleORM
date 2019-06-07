@@ -1,5 +1,7 @@
 package com.ericdmartell.maga.cache;
 
+import java.util.List;
+
 public class EventCountListener implements CacheEventListener {
 
     public long singleHits   = 0;
@@ -15,33 +17,33 @@ public class EventCountListener implements CacheEventListener {
     public long flushes = 0;
 
     @Override
-    public void onSingleHit() {
+    public void onSingleHit(String key) {
         singleHits++;
     }
 
     @Override
-    public void onSingleMiss() {
+    public void onSingleMiss(String key) {
         singleMisses++;
     }
 
     @Override
-    public void onSingleSet() {
+    public void onSingleSet(String key) {
         singleSets++;
     }
 
     @Override
-    public void onBulkHit(int cnt) {
-        bulkHits += cnt;
+    public void onBulkHit(List<String> keys) {
+        bulkHits += keys.size();
     }
 
     @Override
-    public void onBulkMiss(int cnt) {
-        bulkMisses += cnt;
+    public void onBulkMiss(List<String> keys) {
+        bulkMisses += keys.size();
     }
 
     @Override
-    public void onBulkSet(int cnt) {
-        bulkSets += cnt;
+    public void onBulkSet(List<String> keys) {
+        bulkSets += keys.size();
     }
 
     @Override
@@ -50,7 +52,7 @@ public class EventCountListener implements CacheEventListener {
     }
 
     @Override
-    public void onDirty() {
+    public void onDirty(String key) {
         dirties++;
     }
 

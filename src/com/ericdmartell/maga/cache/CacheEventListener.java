@@ -6,15 +6,15 @@ import java.util.List;
 
 public interface CacheEventListener {
 
-    public void onSingleHit();
-    public void onSingleMiss();
-    public void onSingleSet();
+    public void onSingleHit(String key);
+    public void onSingleMiss(String key);
+    public void onSingleSet(String key);
 
-    public void onBulkHit(int cnt);
-    public void onBulkMiss(int cnt);
-    public void onBulkSet(int cnt);
+    public void onBulkHit(List<String> keys);
+    public void onBulkMiss(List<String> keys);
+    public void onBulkSet(List<String> keys);
     public void onBulkTrip();
 
-    public void onDirty();
+    public void onDirty(String key);
     public void onFlush();
 }
