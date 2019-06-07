@@ -198,6 +198,15 @@ public class MAGA {
 		return buildObjectLoad().loadWhereExtra(clazz, where, extra, params);
 	}
 
+	public <T extends MAGAObject> T loadSingleWhere(Class<T> clazz, String where, Object...params) {
+		List<T> list = loadWhere(clazz, where, params);
+		if (list.isEmpty()) {
+			return null;
+		} else {
+			return list.get(0);
+		}
+	}
+
 	public <T extends MAGAObject> List<T> loadByIndex(Class<T> clazz, String columnName, Object value) {
 		List<Long> ids = loadIdsByIndex(clazz, columnName, value);
 		return load(clazz, ids);
