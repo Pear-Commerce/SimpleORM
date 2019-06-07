@@ -49,11 +49,6 @@ public class CacheTest extends BaseMAGATest {
             }
 
             @Override
-            public void onSingleTrip() {
-
-            }
-
-            @Override
             public void onBulkHit(int cnt) {
 
             }
