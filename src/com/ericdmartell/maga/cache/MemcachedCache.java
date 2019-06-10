@@ -8,9 +8,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
+
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.OperationFuture;
-import org.apache.commons.lang3.StringUtils;
 
 public class MemcachedCache extends MAGACache {
 	
