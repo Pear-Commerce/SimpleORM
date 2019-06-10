@@ -19,7 +19,7 @@ import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.*;
 
 import gnu.trove.map.hash.THashMap;
-import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang.ObjectUtils;
 
 public class ObjectUpdate extends MAGAAwareContext {
 

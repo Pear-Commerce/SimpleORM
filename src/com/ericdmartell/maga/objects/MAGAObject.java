@@ -12,7 +12,7 @@ import com.ericdmartell.maga.utils.MAGAException;
 import com.ericdmartell.maga.utils.ReflectionUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import gnu.trove.map.hash.THashMap;
-import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang.BooleanUtils;
 
 public abstract class MAGAObject<T extends MAGAObject<T>> implements Serializable, Cloneable {
 

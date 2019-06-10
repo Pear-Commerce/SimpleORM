@@ -1,7 +1,7 @@
 package com.ericdmartell.maga.utils;
 
 import com.ericdmartell.maga.objects.MAGAObject;
-import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang.ObjectUtils;
 
 import java.util.Arrays;
 
