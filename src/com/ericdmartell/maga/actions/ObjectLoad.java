@@ -9,6 +9,8 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.ericdmartell.maga.MAGA;
 import com.ericdmartell.maga.cache.MAGACache;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;
@@ -16,7 +18,6 @@ import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.JDBCUtil;
 import com.ericdmartell.maga.utils.MAGAException;
 import com.ericdmartell.maga.utils.ReflectionUtils;
-import com.ericdmartell.maga.utils.StringUtils;
 
 public class ObjectLoad extends MAGAAwareContext {
 
