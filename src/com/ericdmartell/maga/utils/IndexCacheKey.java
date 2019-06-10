@@ -1,9 +1,10 @@
 package com.ericdmartell.maga.utils;
 
 import com.ericdmartell.maga.objects.MAGAObject;
-import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.Arrays;
+
+import org.apache.commons.lang.ObjectUtils;
 
 public class IndexCacheKey {
     public static final ThreadLocal<IndexCacheKey> tl = ThreadLocal.withInitial(() -> new IndexCacheKey());

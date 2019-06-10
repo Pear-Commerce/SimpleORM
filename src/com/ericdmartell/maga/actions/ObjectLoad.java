@@ -16,7 +16,7 @@ import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.JDBCUtil;
 import com.ericdmartell.maga.utils.MAGAException;
 import com.ericdmartell.maga.utils.ReflectionUtils;
-import org.apache.commons.lang3.StringUtils;
+import com.ericdmartell.maga.utils.StringUtils;
 
 public class ObjectLoad extends MAGAAwareContext {
 

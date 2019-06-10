@@ -1,8 +1,9 @@
 package com.ericdmartell.maga.utils;
 
-import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
+
+import org.apache.commons.lang.ObjectUtils;
 
 public class HashUtil {
     public static <T> int hashObjectList(List<T> list) {

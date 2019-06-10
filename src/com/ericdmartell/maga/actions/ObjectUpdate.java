@@ -10,6 +10,8 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.lang.ObjectUtils;
+
 import com.ericdmartell.maga.MAGA;
 import com.ericdmartell.maga.annotations.MAGATimestampID;
 import com.ericdmartell.maga.associations.MAGAAssociation;
@@ -19,7 +21,6 @@ import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.*;
 
 import gnu.trove.map.hash.THashMap;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class ObjectUpdate extends MAGAAwareContext {
 
