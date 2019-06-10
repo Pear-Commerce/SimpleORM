@@ -8,7 +8,7 @@ import java.util.Date;
 @MAGATimestampID
 public class DataMigrationRecord extends MAGAObject {
 
-    @MAGAORMField(isIndex = true)
+    @MAGAORMField(isSQLIndex = true)
     public String name;
 
     @MAGAORMField

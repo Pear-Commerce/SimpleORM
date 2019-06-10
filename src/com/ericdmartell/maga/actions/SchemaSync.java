@@ -152,7 +152,7 @@ public class SchemaSync extends MAGAAwareContext {
 								dataSource);
 					}
 				}
-				for (String indexedColumn : ReflectionUtils.getIndexedColumns(clazz)) {
+				for (String indexedColumn : ReflectionUtils.getSQLIndexedColumns(clazz)) {
 					if (!indexes.contains(indexedColumn)) {
 						try {
 							System.out.println("Adding index " + indexedColumn + " to table " + tableName);

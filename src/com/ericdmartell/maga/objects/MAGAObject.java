@@ -1,18 +1,13 @@
 package com.ericdmartell.maga.objects;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.sql.Ref;
 import java.util.List;
 import java.util.Map;
 
-import com.ericdmartell.maga.MAGA;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.utils.MAGAException;
 import com.ericdmartell.maga.utils.ReflectionUtils;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import gnu.trove.map.hash.THashMap;
-import org.apache.commons.lang3.BooleanUtils;
 
 public abstract class MAGAObject<T extends MAGAObject<T>> implements Serializable, Cloneable {
 
@@ -55,15 +50,15 @@ public abstract class MAGAObject<T extends MAGAObject<T>> implements Serializabl
 		return true;
 	}
 
-	public Map<String, Object> getPristineIndexValues() {
+	public Map<String, Object> getPristineCacheIndexValues() {
 		return pristineIndexValues;
 	}
 
 	/**
 	 * We want to keep around old versions of indexed values so we can properly dirty indexes when this object changes
 	 */
-	public void savePristineIndexValues() {
-		List<String> indexedFieldNames = ReflectionUtils.getIndexedColumns(getClass());
+	public void savePristineCacheIndexValues() {
+		List<String> indexedFieldNames = ReflectionUtils.getCacheIndexedColumns(getClass());
 
 		for (String indexedFieldName : indexedFieldNames) {
 			pristineIndexValues.put(indexedFieldName, ReflectionUtils.getFieldValue(this, indexedFieldName));

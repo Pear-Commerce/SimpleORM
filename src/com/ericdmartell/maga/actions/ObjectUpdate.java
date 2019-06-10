@@ -63,7 +63,7 @@ public class ObjectUpdate extends MAGAAwareContext {
                     cache.setObject(obj, getLoadTemplate());
                 }
             }
-            obj.savePristineIndexValues();
+            obj.savePristineCacheIndexValues();
         }
 
         for (MAGAAssociation assoc : affectedAssociations) {
@@ -93,8 +93,8 @@ public class ObjectUpdate extends MAGAAwareContext {
      */
     private void dirtyIndexes(MAGAObject obj, boolean forceIfUnchanged) {
         IndexLoad                      indexAction           = new IndexLoad(getMAGA());
-        Map<String, Object> pristineIndexValues = obj.getPristineIndexValues();
-        for (String indexName : ReflectionUtils.getIndexedColumns(obj.getClass())) {
+        Map<String, Object> pristineIndexValues = obj.getPristineCacheIndexValues();
+        for (String indexName : ReflectionUtils.getCacheIndexedColumns(obj.getClass())) {
             Object currentValue = ReflectionUtils.getFieldValue(obj, indexName);
 
             if (!pristineIndexValues.containsKey(indexName)) {
@@ -201,11 +201,12 @@ public class ObjectUpdate extends MAGAAwareContext {
         }
 
         dirtyIndexes(obj, false);
+        dirtyLoadAll(obj.getClass());
         MAGACache cache = getCache();
         if (getMAGA().isWriteThroughCacheOnUpdate() && cache != null) {
             cache.setObject(obj, getLoadTemplate());
         }
-        obj.savePristineIndexValues();
+        obj.savePristineCacheIndexValues();
     }
 
     private void updateSQL(MAGAObject obj) {
@@ -236,6 +237,13 @@ public class ObjectUpdate extends MAGAAwareContext {
             throw new MAGAException(e);
         } finally {
             JDBCUtil.closeConnection(con);
+        }
+    }
+
+    private <T extends MAGAObject> void dirtyLoadAll(Class<T> clazz) {
+        MAGACache cache = getCache();
+        if (cache != null) {
+            cache.dirty("LoadAll:" + clazz.getSimpleName());
         }
     }
 }

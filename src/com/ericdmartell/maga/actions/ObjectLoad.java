@@ -125,7 +125,7 @@ public class ObjectLoad extends MAGAAwareContext {
 		}
 
 		for (MAGAObject object : ret) {
-			object.savePristineIndexValues();
+			object.savePristineCacheIndexValues();
 		}
 
 		// We went to memcached, we went to the db, and we still have ids left

@@ -1,7 +1,6 @@
 package com.ericdmartell.maga;
 
 import com.ericdmartell.maga.annotations.MAGAORMField;
-import com.ericdmartell.maga.cache.CacheEventListener;
 import com.ericdmartell.maga.cache.EventCountListener;
 import com.ericdmartell.maga.objects.MAGAObject;
 import org.junit.Assert;
@@ -14,10 +13,10 @@ public class IndexTest extends BaseMAGATest {
 
     public static class IndexTestObject extends MAGAObject<IndexTestObject> {
 
-        @MAGAORMField(isIndex = true)
+        @MAGAORMField(isCacheIndex = true)
         String name;
 
-        @MAGAORMField(isIndex = false)
+        @MAGAORMField(isCacheIndex = false)
         String gender;
     }
 

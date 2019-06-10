@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface MAGAORMField {
-	public boolean isIndex() default false;
+	public boolean isSQLIndex() default false;
+	public boolean isCacheIndex() default false;
 	public String dataType() default "";
 }

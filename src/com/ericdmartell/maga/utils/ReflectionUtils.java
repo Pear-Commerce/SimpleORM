@@ -13,10 +13,11 @@ import gnu.trove.map.hash.THashMap;
 public class ReflectionUtils {
 	// An in-memory cache because inspection is slow.
 
-	private static Map<Class<MAGAObject>, Map<String, Field>> classesToFieldNamesToFields        = new THashMap<>();
-	private static Map<Class<MAGAObject>, Map<String, Class>> classesToFieldNamesAndTypes        = new THashMap<>();
-	private static Map<Class, List<String>>                   classesToIndexedFieldNames         = new THashMap<>();
-	public static Set<Class>                                  standardClasses                    = new HashSet<>(Arrays.asList(new Class[] {
+	private static Map<Class<MAGAObject>, Map<String, Field>> classesToFieldNamesToFields   = new THashMap<>();
+	private static Map<Class<MAGAObject>, Map<String, Class>> classesToFieldNamesAndTypes   = new THashMap<>();
+	private static Map<Class, List<String>>                   classesToSQLIndexedFieldNames = new THashMap<>();
+	private static Map<Class, List<String>>                   classesToCacheIndexedFieldNames = new THashMap<>();
+	public static Set<Class>                                  standardClasses               = new HashSet<>(Arrays.asList(new Class[] {
 		int.class, Integer.class, BigDecimal.class, String.class, long.class, Long.class, Date.class, Boolean.class, boolean.class
 	}));
 
@@ -142,11 +143,18 @@ public class ReflectionUtils {
 
 	}
 
-	public static List<String> getIndexedColumns(Class clazz) {
+	public static List<String> getSQLIndexedColumns(Class clazz) {
 		if (!classesToFieldNamesAndTypes.containsKey(clazz)) {
 			buildIndex(clazz);
 		}
-		return classesToIndexedFieldNames.get(clazz);
+		return classesToSQLIndexedFieldNames.get(clazz);
+	}
+
+	public static List<String> getCacheIndexedColumns(Class clazz) {
+		if (!classesToFieldNamesAndTypes.containsKey(clazz)) {
+			buildIndex(clazz);
+		}
+		return classesToCacheIndexedFieldNames.get(clazz);
 	}
 
 	public static List<Field> getAllFields(Class<?> type) {
@@ -161,10 +169,10 @@ public class ReflectionUtils {
 	private static void buildIndex(Class clazz) {
 		
 		Map<String, Field> fieldNamesToField = new THashMap<>();
-		Map<String, Field> fieldNamesToIndexedField = new THashMap<>();
 		Map<String, Class> fieldNamesToType = new THashMap<>();
-		List<String> indexedColumns = new ArrayList<>();
-		
+		List<String> sqlIndexedColumns = new ArrayList<>();
+		List<String> cacheIndexedColumns = new ArrayList<>();
+
 		for (Field field : getAllFields(clazz)) {
 			
 			field.setAccessible(true);
@@ -172,9 +180,11 @@ public class ReflectionUtils {
 				fieldNamesToField.put(field.getName(), field);
 				fieldNamesToType.put(field.getName(), field.getType());
 				MAGAORMField anno = field.getAnnotation(MAGAORMField.class);
-				if (anno.isIndex()) {
-					indexedColumns.add(field.getName());
-					fieldNamesToIndexedField.put(field.getName(), field);
+				if (anno.isSQLIndex()) {
+					sqlIndexedColumns.add(field.getName());
+				}
+				if (anno.isCacheIndex()) {
+					cacheIndexedColumns.add(field.getName());
 				}
 			}
 		}
@@ -184,7 +194,8 @@ public class ReflectionUtils {
 		} catch (NoSuchFieldException | SecurityException e) {
 			throw new MAGAException(e);
 		}
-		classesToIndexedFieldNames.put(clazz, indexedColumns);
+		classesToSQLIndexedFieldNames.put(clazz, sqlIndexedColumns);
+		classesToCacheIndexedFieldNames.put(clazz, cacheIndexedColumns);
 		classesToFieldNamesToFields.put(clazz, fieldNamesToField);
 		classesToFieldNamesAndTypes.put(clazz, fieldNamesToType);
 	}

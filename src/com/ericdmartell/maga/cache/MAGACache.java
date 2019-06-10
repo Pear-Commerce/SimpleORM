@@ -123,9 +123,6 @@ public abstract class MAGACache extends Cache {
 				dirty(existingTemplateKey);
 			}
 		}
-		
-		dirty("LoadAll:" + obj.getClass().getSimpleName());
-
 	}
 
 	public final void cacheAssociatedObjectsForTemplate(MAGAObject baseObject, MAGAAssociation association,

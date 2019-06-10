@@ -32,6 +32,15 @@ public class ObjectDelete extends MAGAAwareContext {
 		MAGACache cache = getCache();
 		if (cache != null) {
 			cache.dirtyObject(obj);
+			dirtyLoadAll(obj.getClass());
+
+		}
+	}
+
+	private <T extends MAGAObject> void dirtyLoadAll(Class<T> clazz) {
+		MAGACache cache = getCache();
+		if (cache != null) {
+			cache.dirty("LoadAll:" + clazz.getSimpleName());
 		}
 	}
 	
