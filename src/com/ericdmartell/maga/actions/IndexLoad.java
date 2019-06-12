@@ -6,6 +6,8 @@ import com.ericdmartell.maga.cache.MAGACache;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;
 import com.ericdmartell.maga.objects.MAGAObject;
 import com.ericdmartell.maga.utils.IndexCacheKey;
+import com.ericdmartell.maga.utils.MAGAException;
+import com.ericdmartell.maga.utils.ReflectionUtils;
 
 import javax.sql.DataSource;
 import java.util.List;
@@ -25,6 +27,9 @@ public class IndexLoad extends MAGAAwareContext {
         List<Long>          ids = null;
 
         Cache cache = getCache();
+        if (!ReflectionUtils.getCacheIndexedColumns(clazz).contains(columnName)) {
+            throw new MAGAException("Field %s is not annotated with MAGAORMField(isCacheIndex = true).  This means indexes will not be properly dirtied when that field changes.");
+        }
         final IndexCacheKey cacheKey = IndexCacheKey.getIndex(clazz, columnName, value);
         if (cache != null) {
             ids = (List<Long>) cache.get(cacheKey.toString());

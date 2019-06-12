@@ -100,6 +100,8 @@ public class SchemaSync extends MAGAAwareContext {
 						fieldType = ReflectionUtils.getFieldType(clazz, columnName);
 					}
 					String columnType;
+					String nullable = null;
+					String defaultValue = null;
 					Field field;
 					try {
 						field = clazz.getField(columnName);
@@ -113,23 +115,29 @@ public class SchemaSync extends MAGAAwareContext {
 						columnType = field.getAnnotation(MAGAORMField.class).dataType();
 					} else if (fieldType == long.class || fieldType == int.class || fieldType == Integer.class
 							|| fieldType == Long.class) {
-						columnType = "bigint(18)";
+						columnType = "bigint(20)";
 					} else if (fieldType == BigDecimal.class) {
 						columnType = "decimal(10,2)";
 					} else if (fieldType == Date.class) {
-						columnType = "timestamp null default null";
+						columnType = "timestamp";
+						nullable = "null";
+						defaultValue = "null";
 					} else if (isId) {
 						columnType = "bigint";
 					} else {
 						columnType = "varchar(500)";
 					}
 
+					String columnDefinition = columnType
+							+ ((nullable != null) ? " " + nullable : "")
+							+ ((defaultValue != null) ? " default " + defaultValue : "");
 					if (!columnsToTypes.containsKey(columnName)) {
 						changes = true;
-						System.out.println("Adding column " + columnName + " to table " + tableName);
+						System.out.println("Adding column " + columnName + ":" + columnDefinition + " to table " + tableName);
+
 						// Column doesnt exist
 						JDBCUtil.executeUpdate(
-								"alter table `" + tableName + "` add column `" + columnName + "` " + columnType,
+								"alter table `" + tableName + "` add column `" + columnName + "` " + columnDefinition,
 								dataSource);
 						if (fieldType.equals(Boolean.class) || fieldType.equals(boolean.class)) {
 							JDBCUtil.executeUpdate(
@@ -141,14 +149,15 @@ public class SchemaSync extends MAGAAwareContext {
 									"update `" + tableName + "` set `" + columnName + "` = 0 ",
 									dataSource);
 						}
-					} else if (!columnsToTypes.get(columnName).toLowerCase().contains(columnType)
+					} else if (!columnsToTypes.get(columnName).toLowerCase().contains(columnType.toLowerCase())
 							&& ((fieldType != String.class && ReflectionUtils.standardClasses.contains(fieldType))
 									|| !columnsToTypes.get(columnName).toLowerCase().contains("text"))) {
 						changes = true;
+
 						System.out.println(
-								"Modifying column " + columnName + ":" + columnType + " on table " + tableName);
+								"Modifying column " + columnName + ":" + columnDefinition + " on table " + tableName + " (originally was " + columnsToTypes.get(columnName).toLowerCase() + ")");
 						JDBCUtil.executeUpdate(
-								"alter table `" + tableName + "` modify column `" + columnName + "` " + columnType + (isId ? " AUTO_INCREMENT" : ""),
+								"alter table `" + tableName + "` modify column `" + columnName + "` " + columnDefinition + (isId ? " AUTO_INCREMENT" : ""),
 								dataSource);
 					}
 				}
