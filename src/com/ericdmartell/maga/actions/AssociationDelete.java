@@ -48,8 +48,14 @@ public class AssociationDelete extends MAGAAwareContext {
 
 		// Cache Part
 		getCache().dirtyAssoc(obj, association);
+		if (!getMAGA().isOptimizeByDisablingTemplates()) {
+			getCache().dirtyAssocTemplateDependencies(obj, association);
+		}
 		for (MAGAObject toDirtyAssoc : objectsOnTheOtherSide) {
 			getCache().dirtyAssoc(toDirtyAssoc, association);
+			if (!getMAGA().isOptimizeByDisablingTemplates()) {
+				getCache().dirtyAssocTemplateDependencies(toDirtyAssoc, association);
+			}
 		}
 	}
 
@@ -66,10 +72,19 @@ public class AssociationDelete extends MAGAAwareContext {
 		
 		//Cache Part
 		getCache().dirtyAssoc(obj, association);
+		if (!getMAGA().isOptimizeByDisablingTemplates()) {
+			getCache().dirtyAssocTemplateDependencies(obj, association);
+		}
 		for (MAGAObject otherSideObject : objectsOnTheOtherSide) {
 			//Since we changed a field on the object on the other side, we gotta dirty its entry.
 			getCache().dirtyObject(otherSideObject);
+			if (!getMAGA().isOptimizeByDisablingTemplates()) {
+				getCache().dirtyObjectTemplateDependencies(otherSideObject);
+			}
 			getCache().dirtyAssoc(otherSideObject, association);
+			if (!getMAGA().isOptimizeByDisablingTemplates()) {
+				getCache().dirtyAssocTemplateDependencies(otherSideObject, association);
+			}
 		}
 
 	}
@@ -86,9 +101,18 @@ public class AssociationDelete extends MAGAAwareContext {
 		
 		//Cache Part
 		getCache().dirtyObject(obj);
+		if (!getMAGA().isOptimizeByDisablingTemplates()) {
+			getCache().dirtyObjectTemplateDependencies(obj);
+		}
 		getCache().dirtyAssoc(obj, association);
+		if (!getMAGA().isOptimizeByDisablingTemplates()) {
+			getCache().dirtyAssocTemplateDependencies(obj, association);
+		}
 		for (MAGAObject toDirtyAssoc : objectsOnTheOtherSide) {
 			getCache().dirtyAssoc(toDirtyAssoc, association);
+			if (!getMAGA().isOptimizeByDisablingTemplates()) {
+				getCache().dirtyAssocTemplateDependencies(toDirtyAssoc, association);
+			}
 		}
 	}
 
@@ -112,6 +136,10 @@ public class AssociationDelete extends MAGAAwareContext {
 		//Cache Part.
 		getCache().dirtyAssoc(obj, association);
 		getCache().dirtyAssoc(obj2, association);
+		if (!getMAGA().isOptimizeByDisablingTemplates()) {
+			getCache().dirtyAssocTemplateDependencies(obj, association);
+			getCache().dirtyAssocTemplateDependencies(obj2, association);
+		}
 	}
 	
 	private void deleteSpecificOneToManyFromOneSide(MAGAObject obj, MAGAObject obj2, MAGAAssociation association) {
@@ -129,7 +157,14 @@ public class AssociationDelete extends MAGAAwareContext {
 		
 		//Cache Part
 		getCache().dirtyObject(obj2);
+		if (!getMAGA().isOptimizeByDisablingTemplates()) {
+			getCache().dirtyObjectTemplateDependencies(obj2);
+		}
 		getCache().dirtyAssoc(obj, association);
 		getCache().dirtyAssoc(obj2, association);
+		if (!getMAGA().isOptimizeByDisablingTemplates()) {
+			getCache().dirtyAssocTemplateDependencies(obj, association);
+			getCache().dirtyAssocTemplateDependencies(obj2, association);
+		}
 	}
 }

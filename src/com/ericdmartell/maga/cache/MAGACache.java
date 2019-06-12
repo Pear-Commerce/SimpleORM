@@ -101,9 +101,13 @@ public abstract class MAGACache extends Cache {
 	public final void dirtyAssoc(MAGAObject obj, MAGAAssociation association) {
 		String key = getAssocKey(obj, association);
 		dirty(key);
+	}
+
+	public final void dirtyAssocTemplateDependencies(MAGAObject obj, MAGAAssociation association) {
+		String key = getAssocKey(obj, association);
 		String dependencyKey = key + ":template_dependencies";
 		List<String> existingTemplateKeys = (List<String>) get(dependencyKey);
-		
+
 		if (existingTemplateKeys != null) {
 			for (String existingTemplateKey : existingTemplateKeys) {
 				dirty(existingTemplateKey);
@@ -115,6 +119,10 @@ public abstract class MAGACache extends Cache {
 	public final void dirtyObject(MAGAObject obj) {
 		String key = getKey(obj);
 		dirty(key);
+	}
+
+	public final void dirtyObjectTemplateDependencies(MAGAObject obj) {
+		String key = getKey(obj);
 
 		String dependencyKey = key + ":template_dependencies";
 		List<String> existingTemplateKeys = (List<String>) get(dependencyKey);

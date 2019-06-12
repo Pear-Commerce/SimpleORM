@@ -45,6 +45,9 @@ public class ObjectUpdate extends MAGAAwareContext {
             addSQL(obj);
             if (cache != null) {
                 cache.dirtyObject(obj);
+                if (!getMAGA().isOptimizeByDisablingTemplates()) {
+                    getCache().dirtyObjectTemplateDependencies(obj);
+                }
             }
         } else {
             // TODO(alex): we can replace this with keeping a set of pristine join fields
@@ -60,7 +63,13 @@ public class ObjectUpdate extends MAGAAwareContext {
             updateSQL(obj);
             if (cache != null) {
                 cache.dirtyObject(obj);
+                if (!getMAGA().isOptimizeByDisablingTemplates()) {
+                    getCache().dirtyObjectTemplateDependencies(obj);
+                }
                 if (getMAGA().isWriteThroughCacheOnUpdate()) {
+                    if (getLoadTemplate() != null && getMAGA().isOptimizeByDisablingTemplates()) {
+                        throw new MAGAException("must not set optimizeByDisablingTemplates to use templates");
+                    }
                     cache.setObject(obj, getLoadTemplate());
                 }
             }
@@ -125,10 +134,19 @@ public class ObjectUpdate extends MAGAAwareContext {
     private void biDirectionalDirty(MAGAObject obj, MAGAAssociation association) {
         List<MAGAObject> otherSide = getMAGA().loadAssociatedObjects(obj, association);
         getCache().dirtyObject(obj);
+        if (!getMAGA().isOptimizeByDisablingTemplates()) {
+            getCache().dirtyObjectTemplateDependencies(obj);
+        }
         for (MAGAObject other : otherSide) {
             getCache().dirtyAssoc(other, association);
+            if (!getMAGA().isOptimizeByDisablingTemplates()) {
+                getCache().dirtyAssocTemplateDependencies(other, association);
+            }
         }
         getCache().dirtyAssoc(obj, association);
+        if (!getMAGA().isOptimizeByDisablingTemplates()) {
+            getCache().dirtyAssocTemplateDependencies(obj, association);
+        }
     }
 
     public void addSQL(MAGAObject obj) {
@@ -202,9 +220,11 @@ public class ObjectUpdate extends MAGAAwareContext {
         }
 
         dirtyIndexes(obj, false);
-        dirtyLoadAll(obj.getClass());
         MAGACache cache = getCache();
         if (getMAGA().isWriteThroughCacheOnUpdate() && cache != null) {
+            if (getLoadTemplate() != null && getMAGA().isOptimizeByDisablingTemplates()) {
+                throw new MAGAException("must not set optimizeByDisablingTemplates to use templates");
+            }
             cache.setObject(obj, getLoadTemplate());
         }
         obj.savePristineCacheIndexValues();
@@ -238,13 +258,6 @@ public class ObjectUpdate extends MAGAAwareContext {
             throw new MAGAException(e);
         } finally {
             JDBCUtil.closeConnection(con);
-        }
-    }
-
-    private <T extends MAGAObject> void dirtyLoadAll(Class<T> clazz) {
-        MAGACache cache = getCache();
-        if (cache != null) {
-            cache.dirty("LoadAll:" + clazz.getSimpleName());
         }
     }
 }

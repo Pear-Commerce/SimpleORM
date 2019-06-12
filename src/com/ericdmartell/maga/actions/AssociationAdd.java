@@ -65,6 +65,10 @@ public class AssociationAdd extends MAGAAwareContext {
 		// Cache Part
 		getCache().dirtyAssoc(obj, association);
 		getCache().dirtyAssoc(obj2, association);
+		if (!getMAGA().isOptimizeByDisablingTemplates()) {
+			getCache().dirtyAssocTemplateDependencies(obj, association);
+			getCache().dirtyAssocTemplateDependencies(obj2, association);
+		}
 	}
 
 	private void oneToMany(MAGAObject objOfClass1, MAGAObject objOfClass2, MAGAAssociation association) {
@@ -87,10 +91,22 @@ public class AssociationAdd extends MAGAAwareContext {
 
 		// Cache Part.
 		getCache().dirtyObject(objOfClass2);
+		if (!getMAGA().isOptimizeByDisablingTemplates()) {
+			getCache().dirtyObjectTemplateDependencies(objOfClass2);
+		}
+
 		getCache().dirtyAssoc(objOfClass2, association);
 		getCache().dirtyAssoc(objOfClass1, association);
 		if (oldOneOfTheOneToMany != null) {
 			getCache().dirtyAssoc(oldOneOfTheOneToMany, association);
+		}
+
+		if (!getMAGA().isOptimizeByDisablingTemplates()) {
+			getCache().dirtyAssocTemplateDependencies(objOfClass2, association);
+			getCache().dirtyAssocTemplateDependencies(objOfClass1, association);
+			if (oldOneOfTheOneToMany != null) {
+				getCache().dirtyAssocTemplateDependencies(oldOneOfTheOneToMany, association);
+			}
 		}
 
 		// Since we changed an actual object, we record the change.

@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
-import com.ericdmartell.maga.cache.Cache;
 import com.ericdmartell.maga.actions.*;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.cache.HashMapCache;
@@ -36,6 +35,7 @@ public class MAGA {
 	public ObjectMapper		objectMapper;
 	private String			defaultCharacterSet;
 	private String			defaultCollate;
+	private boolean			optimizeByDisablingTemplates;
 
 	private boolean writeThroughCacheOnUpdate = true;
 
@@ -170,6 +170,15 @@ public class MAGA {
 		return this;
 	}
 
+	public MAGA setOptimizeByDisablingTemplates(boolean optimizeByDisablingTemplates) {
+		this.optimizeByDisablingTemplates = optimizeByDisablingTemplates;
+		return this;
+	}
+
+	public boolean isOptimizeByDisablingTemplates() {
+		return optimizeByDisablingTemplates;
+	}
+
 	public String getDefaultCharacterSet() {
 		return defaultCharacterSet;
 	}
@@ -288,10 +297,17 @@ public class MAGA {
 
 	public void dirtyObject(MAGAObject object) {
 		cache.dirtyObject(object);
+
+		if (!isOptimizeByDisablingTemplates()) {
+			cache.dirtyObjectTemplateDependencies(object);
+		}
 	}
 
 	public void dirtyAssociation(MAGAObject object, MAGAAssociation association) {
 		cache.dirtyAssoc(object, association);
+		if (!isOptimizeByDisablingTemplates()) {
+			cache.dirtyAssocTemplateDependencies(object, association);
+		}
 	}
 
 	public <T extends MAGAObject> List<T> loadWhere(Class<T> clazz, String where, Object... params) {

@@ -118,6 +118,9 @@ public class ObjectLoad extends MAGAAwareContext {
 			}
 
 			if (cache != null) {
+				if (getLoadTemplate() != null && getMAGA().isOptimizeByDisablingTemplates()) {
+					throw new MAGAException("must not set optimizeByDisablingTemplates to use templates");
+				}
 				//We'll have them in the cache next time.
 				cache.setObjects(dbObjects, getLoadTemplate());
 			}
@@ -136,6 +139,9 @@ public class ObjectLoad extends MAGAAwareContext {
 		}
 		
 		if (getLoadTemplate() != null && cache != null) {
+			if (getMAGA().isOptimizeByDisablingTemplates()) {
+				throw new MAGAException("must not set optimizeByDisablingTemplates to use templates");
+			}
 			for (MAGAObject object : ret) {
 				cache.addTemplateDependency(object, getLoadTemplate());
 			}
