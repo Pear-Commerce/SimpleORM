@@ -7,6 +7,7 @@ import java.util.Map;
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.utils.MAGAException;
 import com.ericdmartell.maga.utils.ReflectionUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import gnu.trove.map.hash.THashMap;
 
 public abstract class MAGAObject<T extends MAGAObject<T>> implements Serializable, Cloneable {
@@ -21,6 +22,7 @@ public abstract class MAGAObject<T extends MAGAObject<T>> implements Serializabl
 		}
 	}
 
+	@JsonIgnore
 	public Map<MAGAAssociation, List<MAGAObject>> templateAssociations = null;
 
 	private Map<String, Object> pristineIndexValues = new THashMap<>();
@@ -50,6 +52,7 @@ public abstract class MAGAObject<T extends MAGAObject<T>> implements Serializabl
 		return true;
 	}
 
+	@JsonIgnore
 	public Map<String, Object> getPristineCacheIndexValues() {
 		return pristineIndexValues;
 	}
