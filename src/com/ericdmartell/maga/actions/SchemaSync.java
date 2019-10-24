@@ -1,6 +1,7 @@
 package com.ericdmartell.maga.actions;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -10,6 +11,7 @@ import javax.sql.DataSource;
 
 import com.ericdmartell.maga.cache.Cache;
 import com.ericdmartell.maga.MAGA;
+import org.apache.commons.lang.StringUtils;
 import org.reflections.Reflections;
 
 import com.ericdmartell.maga.annotations.MAGANoHistory;
@@ -49,6 +51,9 @@ public class SchemaSync extends MAGAAwareContext {
 			classes.addAll(new ArrayList(userReflections.getSubTypesOf(MAGAObject.class)));
 
 			for (Class<MAGAObject> clazz : classes) {
+				if (Modifier.isAbstract(clazz.getModifiers())) {
+					continue;
+				}
 				String tableName = clazz.getSimpleName();
 
 				boolean tableExists = JDBCUtil.executeQueryAndReturnSingleLong(dataSource,
@@ -85,7 +90,7 @@ public class SchemaSync extends MAGAAwareContext {
 				List<String> indexes = new ArrayList<>();
 				while (rst.next()) {
 					columnsToTypes.put(rst.getString("Field"), rst.getString("Type"));
-					if (!rst.getString("Key").trim().isEmpty()) {
+					if (!StringUtils.isBlank(rst.getString("Key"))) {
 						indexes.add(rst.getString("Field"));
 					}
 
@@ -168,9 +173,10 @@ public class SchemaSync extends MAGAAwareContext {
 							JDBCUtil.executeUpdate("alter table `" + tableName + "` add index `" + indexedColumn + "`(`"
 									+ indexedColumn + "`)", dataSource);
 						} catch (Exception e) {
-							System.out.println("Index is too wide");
+							e.printStackTrace();
+							System.err.println("Index may be too wide. Attempting with fixed width.");
 							JDBCUtil.executeUpdate("alter table `" + tableName + "` add index `" + indexedColumn + "`(`"
-									+ indexedColumn + "`(100))", dataSource);
+									+ indexedColumn + "`(76))", dataSource);
 						}
 					}
 				}
