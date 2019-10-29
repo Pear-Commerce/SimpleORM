@@ -1,9 +1,7 @@
 package com.ericdmartell.maga.cache;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.ericdmartell.maga.associations.MAGAAssociation;
 import com.ericdmartell.maga.objects.MAGALoadTemplate;
@@ -60,10 +58,8 @@ public abstract class MAGACache extends Cache {
 	}
 
 	public final <T extends MAGAObject> List<T> getObjects(Class<T> clazz, Collection<Long> ids) {
-
 		Map<String, Object> ret = getBulk(getKeys(clazz, ids));
-
-		return new ArrayList(ret.values());
+		return ids.stream().map(id -> (T) ret.get(id)).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
 	public final List<Long> getAssociatedIds(MAGAObject obj, MAGAAssociation association) {
