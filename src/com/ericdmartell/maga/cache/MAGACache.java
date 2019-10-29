@@ -59,7 +59,15 @@ public abstract class MAGACache extends Cache {
 
 	public final <T extends MAGAObject> List<T> getObjects(Class<T> clazz, Collection<Long> ids) {
 		Map<String, Object> ret = getBulk(getKeys(clazz, ids));
-		return ids.stream().map(id -> (T) ret.get(id)).filter(Objects::nonNull).collect(Collectors.toList());
+
+		List<T> results = new ArrayList<>();
+		for (long id : ids) {
+			String key = getKey(clazz, id);
+			if (ret.containsKey(key)) {
+				results.add((T) ret.get(key));
+			}
+		}
+		return results;
 	}
 
 	public final List<Long> getAssociatedIds(MAGAObject obj, MAGAAssociation association) {
