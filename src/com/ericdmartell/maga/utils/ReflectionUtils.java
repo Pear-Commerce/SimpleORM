@@ -8,6 +8,7 @@ import java.util.*;
 import com.ericdmartell.maga.annotations.MAGAORMField;
 import com.ericdmartell.maga.objects.MAGAObject;
 
+import com.ericdmartell.maga.objects.MAGASQLSerializer;
 import gnu.trove.map.hash.THashMap;
 
 public class ReflectionUtils {
@@ -17,6 +18,7 @@ public class ReflectionUtils {
 	private static Map<Class<MAGAObject>, Map<String, Class>> classesToFieldNamesAndTypes   = new THashMap<>();
 	private static Map<Class, List<String>>                   classesToSQLIndexedFieldNames = new THashMap<>();
 	private static Map<Class, List<String>>                   classesToCacheIndexedFieldNames = new THashMap<>();
+	private static Map<Class<MAGAObject>, Map<String, Class<? extends MAGASQLSerializer>>> classesToFieldNamesAndSerializers = new THashMap<>();
 	public static Set<Class>                                  standardClasses               = new HashSet<>(Arrays.asList(new Class[] {
 		int.class, Integer.class, BigDecimal.class, String.class, long.class, Long.class, Date.class, Boolean.class, boolean.class
 	}));
@@ -44,12 +46,14 @@ public class ReflectionUtils {
 		try {
 			Field field = classesToFieldNamesToFields.get(obj.getClass()).get(fieldName);
 			Class fieldClass = getFieldType(obj.getClass(), fieldName);
-			
+			Class<? extends MAGASQLSerializer> serializerClass = classesToFieldNamesAndSerializers.get(obj.getClass()).get(fieldName);
+
 			if (field == null) {
 				return false;
 			}
-			
-			if (fieldClass.equals(BigDecimal.class)) {
+			if (serializerClass != null) {
+				serializerClass.newInstance().setFieldValue(obj, field, fieldClass, String.valueOf(value));
+			} else if (fieldClass.equals(BigDecimal.class)) {
 				if (value == null) {
 					field.set(obj, value);
 				} else {
@@ -80,7 +84,7 @@ public class ReflectionUtils {
 			} else {
 				field.set(obj, value);
 			}
-		} catch (IllegalArgumentException | IllegalAccessException | ClassNotFoundException e) {
+		} catch (IllegalArgumentException | IllegalAccessException | ClassNotFoundException | InstantiationException e) {
 			throw new MAGAException(e);
 		}
 
@@ -98,28 +102,33 @@ public class ReflectionUtils {
 
 		Object ret;
 		Field field = classesToFieldNamesToFields.get(obj.getClass()).get(fieldName);
+		Class<? extends MAGASQLSerializer> serializerClass = classesToFieldNamesAndSerializers.get(obj.getClass()).get(fieldName);
 		Class fieldType = getFieldType(obj.getClass(), fieldName);
 		try {
 			if (field == null) {
 				ret = null;
 			} else {
-				ret = field.get(obj);
-				if (ret != null && !standardClasses.contains(fieldType) && !fieldType.isEnum() && !fieldType.equals(Class.class)) {
-					if (Collection.class.isAssignableFrom(getFieldType(obj.getClass(), fieldName))) {
-						ret = JSONUtil.listToString((List) ret);
-					} else {
-						ret = JSONUtil.serializableToString(ret);
+				if (serializerClass != null) {
+					ret = serializerClass.newInstance().getFieldValue(obj, field, fieldType);
+				} else {
+					ret = field.get(obj);
+					if (ret != null && !standardClasses.contains(fieldType) && !fieldType.isEnum() && !fieldType.equals(Class.class)) {
+						if (Collection.class.isAssignableFrom(getFieldType(obj.getClass(), fieldName))) {
+							ret = JSONUtil.listToString((List) ret);
+						} else {
+							ret = JSONUtil.serializableToString(ret);
+						}
 					}
 				}
 			}
-		} catch (IllegalArgumentException | IllegalAccessException e) {
+		} catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
 			throw new MAGAException(e);
 		}
 		if (fieldType == null) {
 			return ret;
 		}
-		
-		
+
+
 		if (ret == null) {
 			if (fieldType.equals(long.class) || fieldType.equals(Long.class)) {
 				ret = 0L;
@@ -131,7 +140,7 @@ public class ReflectionUtils {
 				return null;
 			}
 		}
-		
+
 		if (fieldType.isEnum()) {
 			return String.valueOf(ret);
 		} else if (fieldType.equals(Class.class)) {
@@ -168,8 +177,10 @@ public class ReflectionUtils {
 	
 	private static void buildIndex(Class clazz) {
 		
-		Map<String, Field> fieldNamesToField = new THashMap<>();
-		Map<String, Class> fieldNamesToType = new THashMap<>();
+		Map<String, Field>                              fieldNamesToField           = new THashMap<>();
+		Map<String, Class>                              fieldNamesToType            = new THashMap<>();
+		Map<String, Class<? extends MAGASQLSerializer>> fieldNamesToSerializerClass = new THashMap<>();
+
 		List<String> sqlIndexedColumns = new ArrayList<>();
 		List<String> cacheIndexedColumns = new ArrayList<>();
 
@@ -186,6 +197,10 @@ public class ReflectionUtils {
 				if (anno.isCacheIndex()) {
 					cacheIndexedColumns.add(field.getName());
 				}
+
+				if (anno.serializer() != null && anno.serializer() != MAGASQLSerializer.class) {
+					fieldNamesToSerializerClass.put(field.getName(), anno.serializer());
+				}
 			}
 		}
 		fieldNamesToType.put("id", long.class);
@@ -198,6 +213,7 @@ public class ReflectionUtils {
 		classesToCacheIndexedFieldNames.put(clazz, cacheIndexedColumns);
 		classesToFieldNamesToFields.put(clazz, fieldNamesToField);
 		classesToFieldNamesAndTypes.put(clazz, fieldNamesToType);
+		classesToFieldNamesAndSerializers.put(clazz, fieldNamesToSerializerClass);
 	}
 
 	public static <T extends MAGAObject> T getEntityFromResultSet(Class<T> clazz, ResultSet rst) {

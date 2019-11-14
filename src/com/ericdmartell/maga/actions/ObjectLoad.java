@@ -3,9 +3,7 @@ package com.ericdmartell.maga.actions;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import javax.sql.DataSource;
 
@@ -97,6 +95,7 @@ public class ObjectLoad extends MAGAAwareContext {
 		}
 		
 		// Try getting them from memcached
+		Map<Long, T> fetched = new HashMap<>();
 		List<T> ret;
 		MAGACache cache = getCache();
 		if (cache != null) {
@@ -146,6 +145,7 @@ public class ObjectLoad extends MAGAAwareContext {
 				cache.addTemplateDependency(object, getLoadTemplate());
 			}
 		}
+
 		return ret;
 	}
 
