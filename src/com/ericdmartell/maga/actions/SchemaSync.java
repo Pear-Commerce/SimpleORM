@@ -130,7 +130,7 @@ public class SchemaSync extends MAGAAwareContext {
 					} else if (isId) {
 						columnType = "bigint";
 					} else {
-						columnType = "varchar(100)";
+						columnType = "varchar(500)";
 					}
 
 					String columnDefinition = columnType
