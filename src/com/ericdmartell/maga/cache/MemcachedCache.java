@@ -1,5 +1,6 @@
 package com.ericdmartell.maga.cache;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -56,7 +57,18 @@ public class MemcachedCache extends MAGACache {
 	public Map<String, Object> getBulkImpl(List<String> keys) {
 		Map<String, String> sanitizedKeys = keys.stream().collect(
 				Collectors.toMap(MemcachedCache::sanitizeKey, Function.identity()));
-		Map<String, Object> sanitizedResults = memcachedClient.getBulk(sanitizedKeys.keySet());
+		Map<String, Object> sanitizedResults;
+		try {
+			sanitizedResults = memcachedClient.getBulk(sanitizedKeys.keySet());
+		} catch (RuntimeException e) {
+			// return nulls for serialization errors
+			// eg: com.esotericsoftware.kryo.KryoException: Buffer underflow. Serialization trace:
+			if (e.getMessage() != null && e.getMessage().contains("erializ")) {
+				sanitizedResults = new HashMap<>();
+			} else {
+				throw e;
+			}
+		}
 		return sanitizedResults.entrySet().stream().collect(
 				Collectors.toMap(sanitizedEntry -> sanitizedKeys.get(sanitizedEntry.getKey()), Map.Entry::getValue));
 	}

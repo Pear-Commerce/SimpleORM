@@ -218,7 +218,7 @@ public class ReflectionUtils {
 
 	public static <T extends MAGAObject> T getEntityFromResultSet(Class<T> clazz, ResultSet rst) {
 		try {
-			T toFill =clazz.newInstance();
+			T toFill = clazz.newInstance();
 			List<String> fieldNames = new ArrayList<>(ReflectionUtils.getFieldNames(clazz));
 			for (String fieldName : fieldNames) {
 				ReflectionUtils.setFieldValue(toFill, fieldName, rst.getObject(fieldName));
