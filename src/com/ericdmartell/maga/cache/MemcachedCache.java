@@ -13,6 +13,7 @@ import org.apache.commons.lang.StringUtils;
 
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.OperationFuture;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 public class MemcachedCache extends MAGACache {
 	
@@ -63,7 +64,7 @@ public class MemcachedCache extends MAGACache {
 		} catch (RuntimeException e) {
 			// return nulls for serialization errors
 			// eg: com.esotericsoftware.kryo.KryoException: Buffer underflow. Serialization trace:
-			if (e.getMessage() != null && e.getMessage().contains("erializ")) {
+			if (ExceptionUtils.getFullStackTrace(e).contains("erializ")) {
 				sanitizedResults = new HashMap<>();
 			} else {
 				throw e;
