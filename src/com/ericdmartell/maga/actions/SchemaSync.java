@@ -33,8 +33,11 @@ import org.reflections.util.ConfigurationBuilder;
 
 public class SchemaSync extends MAGAAwareContext {
 
-	public SchemaSync(MAGA maga) {
+	Reflections reflections;
+
+	public SchemaSync(MAGA maga, Reflections reflections) {
 		super(maga);
+		this.reflections = reflections;
 	}
 
 	public void go() {
@@ -48,7 +51,8 @@ public class SchemaSync extends MAGAAwareContext {
 			Reflections  frameworkReflections = new Reflections(
 					new ConfigurationBuilder()
 							.setUrls(ClasspathHelper.forPackage("com.ericdmartell.maga")));
-			Reflections             userReflections = new Reflections("", new Scanner[0]);
+
+			Reflections             userReflections = reflections != null ? reflections : new Reflections("", new Scanner[0]);
 
 			Set<Class<MAGAObject>> classes = new HashSet<>();
 			classes.addAll(new ArrayList(frameworkReflections.getSubTypesOf(MAGAObject.class)));

@@ -47,7 +47,7 @@ public class MigrationTest extends BaseMAGATest {
 
     @Test
     public void testMigration() {
-        new DataMigrate(getMAGA(), "com.ericdmartell.maga").go();
+        new DataMigrate(getMAGA()).go();
         JDBCUtil.executeQuery(conn, "SELECT * FROM `Migration_Test_Table`");
     }
 }

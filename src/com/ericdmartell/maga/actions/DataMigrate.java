@@ -22,17 +22,21 @@ import java.util.*;
 public class DataMigrate {
 
     MAGA maga;
-    String classPackage;
+    Reflections reflections;
 
-    public DataMigrate(MAGA maga, String classPackage) {
+    public DataMigrate(MAGA maga, Reflections reflections) {
         this.maga = maga;
-        this.classPackage = classPackage;
+        this.reflections = reflections;
+    }
+
+    public DataMigrate(MAGA maga) {
+        this.maga = maga;
     }
 
     public void go() {
-        Reflections  reflections = new Reflections(
+        Reflections  reflections = this.reflections != null ? this.reflections : new Reflections(
                 new ConfigurationBuilder()
-                        .setUrls(ClasspathHelper.forPackage(classPackage))
+                        .setUrls(ClasspathHelper.forPackage(""))
                         .setScanners(new MethodAnnotationsScanner()));
         List<Method> methods     = new ArrayList<>();
         methods.addAll(reflections.getMethodsAnnotatedWith(MAGADataMigration.class));

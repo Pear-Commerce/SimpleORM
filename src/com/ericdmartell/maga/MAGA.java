@@ -24,6 +24,7 @@ import com.ericdmartell.maga.utils.TrackedConnection;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gnu.trove.set.hash.THashSet;
+import org.reflections.Reflections;
 
 public class MAGA {
 
@@ -272,7 +273,10 @@ public class MAGA {
 	}
 
 	public void schemaSync() {
-		new SchemaSync(this).go();
+		schemaSync(null);
+	}
+	public void schemaSync(Reflections reflections) {
+		new SchemaSync(this, reflections).go();
 	}
 
 	private void throwExceptionIfCantSave(MAGAObject object) {
