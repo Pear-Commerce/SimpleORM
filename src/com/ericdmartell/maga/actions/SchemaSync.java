@@ -95,7 +95,7 @@ public class SchemaSync extends MAGAAwareContext {
                     System.out.println("Creating history table " + tableName + "_history");
                 }
                 ResultSet rst = JDBCUtil.executeQuery(connection, "describe `" + tableName + "`");
-                Map<String, String> columnsToTypes = new THashMap<>();
+                Map<String, String> columnsToTypes = new ConcurrentHashMap<>();
                 List<String> indexes = new ArrayList<>();
                 try {
                     while (rst.next()) {
@@ -211,7 +211,7 @@ public class SchemaSync extends MAGAAwareContext {
                     if (association.type() == MAGAAssociation.ONE_TO_MANY) {
                         String tableName = association.class2().getSimpleName();
                         ResultSet rst = JDBCUtil.executeQuery(connection, "describe `" + tableName + "`");
-                        Map<String, String> columnsToTypes = new THashMap<>();
+                        Map<String, String> columnsToTypes = new ConcurrentHashMap<>();
                         List<String> indexes = new ArrayList<>();
 
                         while (rst.next()) {
