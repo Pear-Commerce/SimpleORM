@@ -5,12 +5,15 @@ import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.sql.DataSource;
 
 import com.ericdmartell.maga.cache.Cache;
 import com.ericdmartell.maga.MAGA;
+import com.ericdmartell.maga.utils.ParallelLoader;
 import org.apache.commons.lang.StringUtils;
 import org.reflections.Reflections;
 
@@ -35,7 +38,8 @@ public class SchemaSync extends MAGAAwareContext {
 	}
 
 	public void go() {
-		boolean changes = false;
+		final AtomicBoolean changes = new AtomicBoolean();
+		changes.set(false);
 		DataSource dataSource = getDataSourceWrite();
 		String schema = JDBCUtil.executeQueryAndReturnSingleString(dataSource, "select database()");
 		Connection connection = JDBCUtil.getConnection(dataSource);
@@ -50,9 +54,9 @@ public class SchemaSync extends MAGAAwareContext {
 			classes.addAll(new ArrayList(frameworkReflections.getSubTypesOf(MAGAObject.class)));
 			classes.addAll(new ArrayList(userReflections.getSubTypesOf(MAGAObject.class)));
 
-			for (Class<MAGAObject> clazz : classes) {
+			ParallelLoader.process(classes, clazz -> {
 				if (Modifier.isAbstract(clazz.getModifiers())) {
-					continue;
+					return;
 				}
 				String tableName = clazz.getSimpleName();
 
@@ -60,7 +64,7 @@ public class SchemaSync extends MAGAAwareContext {
 						"SELECT count(*) FROM information_schema.TABLES WHERE  (TABLE_NAME = ?) and (TABLE_SCHEMA = ?)",
 						tableName, schema) == 1;
 				if (!tableExists) {
-					changes = true;
+					changes.set(true);
 					String sql = "create table `" + tableName + "`(id bigint not null AUTO_INCREMENT, primary key(id)) ENGINE=InnoDB";
 					String defaultCharset = getMAGA().getDefaultCharacterSet();
 					String defaultCollate = getMAGA().getDefaultCollate();
@@ -88,12 +92,15 @@ public class SchemaSync extends MAGAAwareContext {
 				ResultSet rst = JDBCUtil.executeQuery(connection, "describe `" + tableName + "`");
 				Map<String, String> columnsToTypes = new THashMap<>();
 				List<String> indexes = new ArrayList<>();
-				while (rst.next()) {
-					columnsToTypes.put(rst.getString("Field"), rst.getString("Type"));
-					if (!StringUtils.isBlank(rst.getString("Key"))) {
-						indexes.add(rst.getString("Field"));
+				try {
+					while (rst.next()) {
+						columnsToTypes.put(rst.getString("Field"), rst.getString("Type"));
+						if (!StringUtils.isBlank(rst.getString("Key"))) {
+							indexes.add(rst.getString("Field"));
+						}
 					}
-
+				} catch (SQLException e) {
+					throw new RuntimeException(e);
 				}
 				Collection<String> fieldNames = new ArrayList<String>(ReflectionUtils.getFieldNames(clazz));
 				fieldNames.add("id");
@@ -111,7 +118,11 @@ public class SchemaSync extends MAGAAwareContext {
 					try {
 						field = clazz.getField(columnName);
 					} catch (NoSuchFieldException e) {
-						field = clazz.getDeclaredField(columnName);
+						try {
+							field = clazz.getDeclaredField(columnName);
+						} catch (NoSuchFieldException ex) {
+							throw new RuntimeException(e);
+						}
 					}
 
 					boolean isId = columnName.equals("id");
@@ -137,7 +148,7 @@ public class SchemaSync extends MAGAAwareContext {
 							+ ((nullable != null) ? " " + nullable : "")
 							+ ((defaultValue != null) ? " default " + defaultValue : "");
 					if (!columnsToTypes.containsKey(columnName)) {
-						changes = true;
+						changes.set(true);
 						System.out.println("Adding column " + columnName + ":" + columnDefinition + " to table " + tableName);
 
 						// Column doesnt exist
@@ -149,15 +160,15 @@ public class SchemaSync extends MAGAAwareContext {
 									"update `" + tableName + "` set `" + columnName + "` = 0 ",
 									dataSource);
 						} else if (fieldType == long.class || fieldType == int.class || fieldType == Integer.class
-							|| fieldType == Long.class) {
+								|| fieldType == Long.class) {
 							JDBCUtil.executeUpdate(
 									"update `" + tableName + "` set `" + columnName + "` = 0 ",
 									dataSource);
 						}
 					} else if (!columnsToTypes.get(columnName).toLowerCase().contains(columnType.toLowerCase())
 							&& ((fieldType != String.class && ReflectionUtils.standardClasses.contains(fieldType))
-									|| !columnsToTypes.get(columnName).toLowerCase().contains("text"))) {
-						changes = true;
+							|| !columnsToTypes.get(columnName).toLowerCase().contains("text"))) {
+						changes.set(true);
 
 						System.out.println(
 								"Modifying column " + columnName + ":" + columnDefinition + " on table " + tableName + " (originally was " + columnsToTypes.get(columnName).toLowerCase() + ")");
@@ -180,8 +191,9 @@ public class SchemaSync extends MAGAAwareContext {
 						}
 					}
 				}
+			});
 
-			}
+
 			List<Class<MAGAAssociation>> associationsClasses = new ArrayList(
 					userReflections.getSubTypesOf(MAGAAssociation.class));
 			List<MAGAAssociation> associations = new ArrayList<>();
@@ -203,7 +215,7 @@ public class SchemaSync extends MAGAAwareContext {
 					}
 					String columnName = association.class2Column();
 					if (!columnsToTypes.containsKey(columnName)) {
-						changes = true;
+						changes.set(true);
 						System.out.println("Adding join column " + columnName + " on " + tableName);
 						if (association.class1().isAnnotationPresent(MAGATimestampID.class)) {
 							JDBCUtil.executeUpdate(
@@ -235,7 +247,7 @@ public class SchemaSync extends MAGAAwareContext {
 								: "bigint(18)";
 						String type2 = association.class2().isAnnotationPresent(MAGATimestampID.class) ? "varchar(255)"
 								: "bigint(18)";
-						changes = true;
+						changes.set(true);
 						JDBCUtil.executeUpdate("create table `" + tableName + "`(" + col1 + " " + type1 + ", " + col2
 								+ "  " + type2 + ", dateAssociated timestamp null default null, firstAssoc varchar(1))", dataSource);
 						JDBCUtil.executeUpdate(
@@ -284,13 +296,12 @@ public class SchemaSync extends MAGAAwareContext {
 					}
 				}
 			}
-
 		} catch (Exception e) {
 			throw new MAGAException(e);
 		} finally {
 			JDBCUtil.closeConnection(connection);
 		}
-		if (changes) {
+		if (changes.get()) {
 			Cache cache = getCache();
 			if (cache != null) {
 				cache.flush();

@@ -19,7 +19,7 @@ public class IndexLoad extends MAGAAwareContext {
         super(maga);
     }
 
-    public IndexLoad(MAGA maga) {
+    public  IndexLoad(MAGA maga) {
         super(maga);
     }
 
