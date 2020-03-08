@@ -6,6 +6,9 @@ import com.ericdmartell.maga.objects.DataMigrationRecord;
 import com.ericdmartell.maga.objects.MAGAObject;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
+import org.reflections.scanners.TypeElementsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
@@ -34,10 +37,11 @@ public class DataMigrate {
     }
 
     public void go() {
-        Reflections  reflections = this.reflections != null ? this.reflections : new Reflections(
+        Reflections  reflections = this.reflections != null ? this.reflections : (new Reflections(
                 new ConfigurationBuilder()
                         .setUrls(ClasspathHelper.forPackage(""))
-                        .setScanners(new MethodAnnotationsScanner()));
+                        .setScanners(new MethodAnnotationsScanner(), new TypeElementsScanner(), new TypeAnnotationsScanner(), new
+                                SubTypesScanner())));
         List<Method> methods     = new ArrayList<>();
         methods.addAll(reflections.getMethodsAnnotatedWith(MAGADataMigration.class));
         methods.sort(Comparator.comparing(this::getOrder));
