@@ -10,6 +10,8 @@ import com.ericdmartell.maga.objects.MAGAObject;
 
 import com.ericdmartell.maga.objects.MAGASQLSerializer;
 import gnu.trove.map.hash.THashMap;
+import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
 
 public class ReflectionUtils {
 	// An in-memory cache because inspection is slow.
@@ -37,6 +39,18 @@ public class ReflectionUtils {
 			buildIndex(clazz);
 		}
 		return classesToFieldNamesAndTypes.get(clazz).get(fieldName);
+	}
+
+	public static boolean toBoolean(Object target) {
+		if (target == null) {
+			return false;
+		}
+		String str = String.valueOf(target);
+		if (StringUtils.isNumeric(str)) {
+			return BooleanUtils.toBoolean(Integer.parseInt(str));
+		} else {
+			return BooleanUtils.toBoolean(String.valueOf(target));
+		}
 	}
 			
 	public static boolean setFieldValue(MAGAObject obj, String fieldName, Object value) {
@@ -71,8 +85,8 @@ public class ReflectionUtils {
 				field.set(obj, ((Number) value).intValue());
 			} else if (fieldClass.equals(String.class) && value instanceof Number) {
 				field.set(obj, value + "");
-			} else if ((fieldClass.equals(Boolean.class) || fieldClass.equals(boolean.class)) && value instanceof String) {
-				field.set(obj, value == null ? false : ("1".equals(value + "")));
+			} else if ((fieldClass.equals(Boolean.class) || fieldClass.equals(boolean.class))) {
+				field.set(obj, toBoolean(value));
 			} else if (value != null && (fieldClass.isEnum())) {
 				field.set(obj, Enum.valueOf(fieldClass, String.valueOf(value)));
 			} else if (value != null && fieldClass.equals(Class.class)) {
