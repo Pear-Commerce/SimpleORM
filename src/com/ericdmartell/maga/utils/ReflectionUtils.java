@@ -4,26 +4,29 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.ericdmartell.maga.annotations.MAGAORMField;
 import com.ericdmartell.maga.objects.MAGAObject;
 
 import com.ericdmartell.maga.objects.MAGASQLSerializer;
 import gnu.trove.map.hash.THashMap;
+import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
 
 public class ReflectionUtils {
 	// An in-memory cache because inspection is slow.
 
-	private static Map<Class<MAGAObject>, Map<String, Field>> classesToFieldNamesToFields   = new THashMap<>();
-	private static Map<Class<MAGAObject>, Map<String, Class>> classesToFieldNamesAndTypes   = new THashMap<>();
-	private static Map<Class, List<String>>                   classesToSQLIndexedFieldNames = new THashMap<>();
-	private static Map<Class, List<String>>                   classesToCacheIndexedFieldNames = new THashMap<>();
-	private static Map<Class<MAGAObject>, Map<String, Class<? extends MAGASQLSerializer>>> classesToFieldNamesAndSerializers = new THashMap<>();
+	private static Map<Class<MAGAObject>, Map<String, Field>> classesToFieldNamesToFields   = new ConcurrentHashMap<>();
+	private static Map<Class<MAGAObject>, Map<String, Class>> classesToFieldNamesAndTypes   = new ConcurrentHashMap<>();
+	private static Map<Class, List<String>>                   classesToSQLIndexedFieldNames = new ConcurrentHashMap<>();
+	private static Map<Class, List<String>>                   classesToCacheIndexedFieldNames = new ConcurrentHashMap<>();
+	private static Map<Class<MAGAObject>, Map<String, Class<? extends MAGASQLSerializer>>> classesToFieldNamesAndSerializers = new ConcurrentHashMap<>();
 	public static Set<Class>                                  standardClasses               = new HashSet<>(Arrays.asList(new Class[] {
 		int.class, Integer.class, BigDecimal.class, String.class, long.class, Long.class, Date.class, Boolean.class, boolean.class
 	}));
 
-	public static Collection<String> getFieldNames(Class clazz) {
+	public synchronized static Collection<String> getFieldNames(Class clazz) {
 		// Lazily populating classesToFieldNamesToFields since 2016.
 		if (!classesToFieldNamesAndTypes.containsKey(clazz)) {
 			buildIndex(clazz);
@@ -32,14 +35,26 @@ public class ReflectionUtils {
 		return classesToFieldNamesAndTypes.get(clazz).keySet();
 	}
 
-	public static Class getFieldType(Class clazz, String fieldName) {
+	public synchronized static Class getFieldType(Class clazz, String fieldName) {
 		if (!classesToFieldNamesAndTypes.containsKey(clazz)) {
 			buildIndex(clazz);
 		}
 		return classesToFieldNamesAndTypes.get(clazz).get(fieldName);
 	}
-			
-	public static boolean setFieldValue(MAGAObject obj, String fieldName, Object value) {
+
+	public static boolean toBoolean(Object target) {
+		if (target == null) {
+			return false;
+		}
+		String str = String.valueOf(target);
+		if (StringUtils.isNumeric(str)) {
+			return BooleanUtils.toBoolean(Integer.parseInt(str));
+		} else {
+			return BooleanUtils.toBoolean(String.valueOf(target));
+		}
+	}
+
+	public synchronized static boolean setFieldValue(MAGAObject obj, String fieldName, Object value) {
 		if (!classesToFieldNamesAndTypes.containsKey(obj.getClass())) {
 			buildIndex(obj.getClass());
 		}
@@ -71,8 +86,8 @@ public class ReflectionUtils {
 				field.set(obj, ((Number) value).intValue());
 			} else if (fieldClass.equals(String.class) && value instanceof Number) {
 				field.set(obj, value + "");
-			} else if ((fieldClass.equals(Boolean.class) || fieldClass.equals(boolean.class)) && value instanceof String) {
-				field.set(obj, value == null ? false : ("1".equals(value + "")));
+			} else if ((fieldClass.equals(Boolean.class) || fieldClass.equals(boolean.class))) {
+				field.set(obj, toBoolean(value));
 			} else if (value != null && (fieldClass.isEnum())) {
 				field.set(obj, Enum.valueOf(fieldClass, String.valueOf(value)));
 			} else if (value != null && fieldClass.equals(Class.class)) {
@@ -91,7 +106,7 @@ public class ReflectionUtils {
 		return true;
 	}
 
-	public static Object getFieldValue(MAGAObject obj, String fieldName) {
+	public synchronized static Object getFieldValue(MAGAObject obj, String fieldName) {
 		try {
 		if (!classesToFieldNamesAndTypes.containsKey(obj.getClass())) {
 			buildIndex(obj.getClass());
@@ -152,21 +167,21 @@ public class ReflectionUtils {
 
 	}
 
-	public static List<String> getSQLIndexedColumns(Class clazz) {
+	public synchronized static List<String> getSQLIndexedColumns(Class clazz) {
 		if (!classesToFieldNamesAndTypes.containsKey(clazz)) {
 			buildIndex(clazz);
 		}
 		return classesToSQLIndexedFieldNames.get(clazz);
 	}
 
-	public static List<String> getCacheIndexedColumns(Class clazz) {
+	public synchronized static List<String> getCacheIndexedColumns(Class clazz) {
 		if (!classesToFieldNamesAndTypes.containsKey(clazz)) {
 			buildIndex(clazz);
 		}
 		return classesToCacheIndexedFieldNames.get(clazz);
 	}
 
-	public static List<Field> getAllFields(Class<?> type) {
+	public synchronized static List<Field> getAllFields(Class<?> type) {
 		List<Field> fields = new ArrayList<>();
 		fields.addAll(Arrays.asList(type.getDeclaredFields()));
 	    if (type.getSuperclass() != null) {
@@ -175,7 +190,7 @@ public class ReflectionUtils {
 	    return fields;
 	}
 	
-	private static void buildIndex(Class clazz) {
+	private synchronized static void buildIndex(Class clazz) {
 		
 		Map<String, Field>                              fieldNamesToField           = new THashMap<>();
 		Map<String, Class>                              fieldNamesToType            = new THashMap<>();
